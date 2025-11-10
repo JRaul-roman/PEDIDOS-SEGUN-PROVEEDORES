@@ -381,7 +381,6 @@
     <!-- JavaScript Integrado -->
     <script>
         // --- Lógica de Datos ---
-        const defaultProvidersData = {};
         let providersData = {};
         let orderHistory = {};
 
@@ -394,15 +393,26 @@
             localStorage.setItem('myProvidersData', JSON.stringify(providersData));
         }
 
-        function loadData() {
+        async function loadData() {
             let savedData = localStorage.getItem('myProvidersData');
             
             if (!savedData || Object.keys(JSON.parse(savedData)).length === 0) {
-                 // Cargar datos por defecto y convertirlos
-                 providersData = Object.keys(defaultProvidersData).reduce((acc, key) => {
-                    acc[key] = convertToObjectArray(defaultProvidersData[key]);
-                    return acc;
-                }, {});
+                 // Cargar datos por defecto desde proveedores.json
+                 try {
+                    const response = await fetch('proveedores.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const defaultProviders = await response.json();
+                    providersData = Object.keys(defaultProviders).reduce((acc, key) => {
+                        acc[key] = convertToObjectArray(defaultProviders[key]);
+                        return acc;
+                    }, {});
+                    saveData(); // Guardar los datos por defecto en localStorage
+                 } catch (error) {
+                    console.error('Error al cargar los datos de proveedores por defecto:', error);
+                    providersData = {};
+                 }
             } else {
                 // Cargar datos guardados y migrarlos si es necesario
                  providersData = JSON.parse(savedData);
@@ -426,7 +436,7 @@
 
 
         // --- Inicialización de la aplicación ---
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             
             // --- Elementos del DOM ---
             const providerButtonsContainer = document.getElementById('provider-buttons');
@@ -1172,7 +1182,7 @@
             });
 
             // --- Carga Inicial ---
-            loadData();
+            await loadData();
             loadOrderHistory();
             setDarkMode(); // Aplicar modo oscuro al cargar
             renderProviderButtons();
