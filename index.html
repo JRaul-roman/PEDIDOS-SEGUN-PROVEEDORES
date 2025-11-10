@@ -584,18 +584,26 @@
 
         async function loadData() {
             let savedData = localStorage.getItem('myProvidersData');
-            
-            if (savedData && Object.keys(JSON.parse(savedData)).length > 0) {
-                // Cargar datos guardados y migrarlos si es necesario
-                 providersData = JSON.parse(savedData);
-                 for (const provider in providersData) {
-                    // Si encontramos datos antiguos (array de strings), los convertimos
-                    if (providersData[provider].length > 0 && typeof providersData[provider][0] === 'string') {
-                        providersData[provider] = convertToObjectArray(providersData[provider]);
+            let loadedFromSave = false;
+
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    if (Object.keys(parsedData).length > 0) {
+                        providersData = parsedData;
+                        for (const provider in providersData) {
+                            if (providersData[provider].length > 0 && typeof providersData[provider][0] === 'string') {
+                                providersData[provider] = convertToObjectArray(providersData[provider]);
+                            }
+                        }
+                        loadedFromSave = true;
                     }
+                } catch (e) {
+                    console.error("Error al parsear los datos guardados de localStorage, se cargarán los datos por defecto.", e);
                 }
-            } else {
-                 // Cargar datos por defecto desde el JSON incrustado
+            }
+
+            if (!loadedFromSave) {
                  try {
                     const embeddedDataElement = document.getElementById('proveedores-data');
                     const defaultProviders = JSON.parse(embeddedDataElement.textContent);
@@ -603,7 +611,7 @@
                         acc[key] = convertToObjectArray(defaultProviders[key]);
                         return acc;
                     }, {});
-                    saveData(); // Guardar los datos por defecto en localStorage
+                    saveData();
                  } catch (error) {
                     console.error('Error al cargar los datos de proveedores incrustados:', error);
                     providersData = {};
