@@ -1,0 +1,1195 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Proveedores y Productos</title>
+    
+    <!-- Librerías Externas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/css/index.css">
+    
+    <!-- Estilos CSS Integrados -->
+    <style>
+        /* --- Variables de Color (Tema Claro y Oscuro) --- */
+        :root {
+          --bg-gradient-start: #f3f4f6;
+          --bg-gradient-end: #e5e7eb;
+          --box-bg-color: #ffffff;
+          --box-shadow-color: rgba(0, 0, 0, 0.08);
+          --box-border-color: #e5e7eb;
+          --inner-bg-color: #f9fafb;
+          --text-color: #1f2937;
+          --text-color-secondary: #6b7280;
+          --title-text-color: #111827;
+          /* Colores primarios cambiados a azul */
+          --btn-primary-bg: #3b82f6; /* Azul-500 */
+          --btn-primary-hover-bg: #2563eb; /* Azul-600 */
+          /* Colores secundarios */
+          --btn-secondary-bg: #14b8a6; /* Teal-500 */
+          --btn-secondary-hover-bg: #0d9488; /* Teal-600 */
+          --btn-tertiary-bg: #6b7280;
+          --btn-tertiary-hover-bg: #4b5563;
+          --btn-danger-bg: #ef4444; /* Rojo-500 */
+          --btn-danger-hover-bg: #dc2626; /* Rojo-600 */
+          --input-bg-color: #ffffff;
+          --input-border-color: #d1d5db;
+          /* Color de enfoque cambiado a azul */
+          --input-focus-ring-color: #3b82f6;
+          --keyboard-bg: #d1d5db;
+          --keyboard-key-bg: #ffffff;
+          --keyboard-key-text: #1f2937;
+        }
+
+        body.dark-mode {
+          --bg-gradient-start: #1f2937;
+          --bg-gradient-end: #111827;
+          --box-bg-color: #374151;
+          --box-shadow-color: rgba(0, 0, 0, 0.2);
+          --box-border-color: #4b5563;
+          --inner-bg-color: #1f2937;
+          --text-color: #f3f4f6;
+          --text-color-secondary: #9ca3af;
+          --title-text-color: #ffffff;
+          /* Colores primarios cambiados a azul (modo oscuro) */
+          --btn-primary-bg: #60a5fa; /* Azul-400 */
+          --btn-primary-hover-bg: #3b82f6; /* Azul-500 */
+          /* Colores secundarios (modo oscuro) */
+          --btn-secondary-bg: #2dd4bf; /* Teal-400 */
+          --btn-secondary-hover-bg: #14b8a6; /* Teal-500 */
+          --btn-tertiary-bg: #9ca3af;
+          --btn-tertiary-hover-bg: #6b7280;
+          --btn-danger-bg: #f87171; /* Rojo-400 */
+          --btn-danger-hover-bg: #ef4444; /* Rojo-500 */
+          --input-bg-color: #4b5563;
+          --input-border-color: #6b7280;
+          /* Color de enfoque cambiado a azul (modo oscuro) */
+          --input-focus-ring-color: #60a5fa;
+          --keyboard-bg: #1f2937;
+          --keyboard-key-bg: #4b5563;
+          --keyboard-key-text: #f3f4f6;
+        }
+
+        /* --- Estilos Generales y de Transición --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: linear-gradient(to bottom right, var(--bg-gradient-start), var(--bg-gradient-end));
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .title-text { color: var(--title-text-color); }
+        .subtitle-text { color: var(--text-color-secondary); }
+        .text-color { color: var(--text-color); }
+        .text-color-secondary { color: var(--text-color-secondary); }
+        .bg-inner { background-color: var(--inner-bg-color); }
+
+        /* --- Estilo de Caja Mejorado --- */
+        .box-component {
+          background-color: var(--box-bg-color);
+          border-radius: 1rem;
+          box-shadow: 0 10px 25px -5px var(--box-shadow-color), 0 8px 10px -6px var(--box-shadow-color);
+          padding: 1.5rem;
+          border: 1px solid var(--box-border-color);
+          transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* --- Estilos para Botones e Inputs --- */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            cursor: pointer;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background-color: var(--btn-primary-bg); }
+        .btn-primary:hover { background-color: var(--btn-primary-hover-bg); }
+        .btn-secondary { background-color: var(--btn-secondary-bg); }
+        .btn-secondary:hover { background-color: var(--btn-secondary-hover-bg); }
+        .btn-tertiary { background-color: var(--btn-tertiary-bg); }
+        .btn-tertiary:hover { background-color: var(--btn-tertiary-hover-bg); }
+        .btn-danger { background-color: var(--btn-danger-bg); }
+        .btn-danger:hover { background-color: var(--btn-danger-hover-bg); }
+
+        .input-field {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--input-border-color);
+            background-color: var(--input-bg-color);
+            color: var(--text-color);
+            border-radius: 0.5rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--input-focus-ring-color);
+            box-shadow: 0 0 0 3px var(--input-focus-ring-color)33;
+        }
+
+        /* --- Botón de Proveedor Activo --- */
+        .active-provider {
+            background-color: var(--btn-primary-bg) !important;
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+        /* --- Teclado Virtual --- */
+        #keyboard-container {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+            background-color: var(--keyboard-bg);
+            padding: 8px;
+            transition: transform 0.3s ease-in-out;
+            transform: translateY(100%);
+        }
+        #keyboard-container.visible { transform: translateY(0); }
+        .simple-keyboard { max-width: 1000px; margin: 0 auto; }
+        .hg-theme-default { background-color: transparent !important; }
+        .hg-button {
+            background-color: var(--keyboard-key-bg) !important;
+            color: var(--keyboard-key-text) !important;
+            border-radius: 6px;
+            border-bottom: none !important;
+        }
+
+        /* --- Estilos del Modal --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        /* --- Estilos para el selector de cantidad --- */
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .quantity-btn {
+            background-color: var(--btn-tertiary-bg);
+            color: white;
+            border: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .quantity-input {
+            width: 3rem;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* Estilo para producto seleccionado */
+        .selected-product {
+            background-color: var(--btn-secondary-bg)22;
+        }
+
+        @media (min-width: 640px) {
+            #product-list > li:nth-child(2n-1) {
+                border-right: 1px solid var(--box-shadow-color);
+                box-shadow: 1px 0 0 var(--box-bg-color);
+                padding-right: 1rem;
+            }
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+        }
+
+        .input-small {
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body class="pb-32">
+
+    <div class="container mx-auto p-2 sm:p-3 lg:p-4">
+        <header class="flex flex-row justify-between items-center mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold title-text">PROVEEDORES</h1>
+            <button id="history-btn" class="btn btn-secondary mt-2 sm:mt-0 btn-small">Historial de Pedidos</button>
+        </header>
+
+        <!-- Componente de caja principal -->
+        <main class="box-component" style="padding: 1rem;">
+            <div id="provider-buttons" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+
+            <div id="product-display" class="bg-inner rounded-xl p-4 min-h-[200px]">
+                <h2 id="provider-name" class="text-xl font-semibold mb-3 text-color">Selecciona un proveedor</h2>
+                <ul id="product-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-color-secondary mb-4">
+                     <li class="italic p-1">Los productos aparecerán aquí...</li>
+                </ul>
+                
+                <div id="product-actions" class="hidden">
+                    <form id="add-product-form">
+                        <h3 class="text-lg font-semibold mb-2 text-color">Añadir Producto</h3>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="new-product-name" placeholder="Nombre del nuevo producto" class="input-field input-small" required>
+                            <button type="submit" class="btn btn-secondary btn-small">
+                                Añadir Producto
+                            </button>
+                        </div>
+                    </form>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                         <button id="save-order-btn" class="btn btn-primary flex-grow sm:flex-grow-0 btn-small">Guardar Pedido Actual</button>
+                         <button id="reset-quantities-btn" class="btn btn-tertiary flex-grow sm:flex-grow-0 btn-small">Resetear Cantidades</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-[var(--box-border-color)] flex flex-wrap items-center gap-2">
+                <button id="add-provider-btn" class="btn btn-primary w-full sm:w-auto btn-small">Nuevo Proveedor</button>
+                <button id="delete-provider-btn" class="btn btn-danger w-full sm:w-auto hidden btn-small">Eliminar Proveedor</button>
+            </div>
+            
+            <div id="selected-products-section" class="mt-6 pt-4 border-t border-[var(--box-border-color)]">
+                <h2 class="text-xl font-semibold mb-3 text-color">Resumen del Pedido Actual</h2>
+                <ul id="selected-products-list" class="space-y-1">
+                    <li class="italic text-color-secondary">Selecciona un proveedor para ver el resumen de su pedido.</li>
+                </ul>
+            </div>
+        </main>
+
+        <footer class="text-center mt-6">
+            <div class="flex justify-center flex-wrap gap-4">
+                 <button id="show-export-modal-btn" class="btn btn-tertiary">Exportar Pedido</button>
+                 <button id="print-btn" class="btn btn-tertiary">Imprimir Pedido</button>
+                 <button id="reset-all-btn" class="btn btn-tertiary">Resetear Todo</button>
+                 <button id="reset-providers-btn" class="btn btn-danger">Restablecer Proveedores por Defecto</button>
+            </div>
+            <p class="text-color-secondary text-sm mt-6">&copy; 2024 - Aplicación de Proveedores</p>
+        </footer>
+    </div>
+    
+    <!-- Modal para Añadir Proveedor -->
+    <div id="add-provider-modal" class="modal-overlay">
+        <div class="modal-content box-component">
+            <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-2xl font-semibold text-color">Nuevo Proveedor</h2>
+                 <button id="close-add-provider-modal-btn" class="text-color-secondary text-2xl font-bold">&times;</button>
+            </div>
+            <form id="add-provider-form" class="flex flex-col sm:flex-row gap-4">
+                <input type="text" id="new-provider-name" placeholder="Nombre del nuevo proveedor" class="input-field" required>
+                <button type="submit" class="btn btn-primary">
+                    Añadir Proveedor
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Historial de Pedidos -->
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-content box-component">
+            <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-2xl font-semibold text-color">Historial de Pedidos Guardados</h2>
+                 <button id="close-modal-btn" class="text-color-secondary text-2xl font-bold">&times;</button>
+            </div>
+            <div id="history-list" class="space-y-4">
+                <!-- El historial se cargará aquí -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Confirmación de Borrado -->
+    <div id="delete-confirm-modal" class="modal-overlay">
+        <div class="modal-content box-component text-center">
+            <h2 class="text-2xl font-semibold text-color mb-4">Confirmar Eliminación</h2>
+            <p id="delete-modal-text" class="text-color-secondary mb-6">¿Estás seguro? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-delete-btn" class="btn btn-tertiary">Cancelar</button>
+                <button id="confirm-delete-btn" class="btn btn-danger">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Pedido Guardado -->
+    <div id="view-order-modal" class="modal-overlay">
+        <div class="modal-content box-component">
+            <div class="flex justify-between items-center mb-6">
+                 <h2 id="view-order-title" class="text-2xl font-semibold text-color">Detalle del Pedido</h2>
+                 <button id="close-view-order-modal-btn" class="text-color-secondary text-2xl font-bold">&times;</button>
+            </div>
+            <div id="view-order-list" class="space-y-2 mb-6">
+                <!-- Los productos del pedido se cargarán aquí -->
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="cancel-view-order-btn" class="btn btn-tertiary">Cancelar</button>
+                <button id="continue-order-btn" class="btn btn-primary">Continuar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Opciones de Exportación -->
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal-content box-component">
+            <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-2xl font-semibold text-color">Opciones de Exportación</h2>
+                 <button id="close-export-modal-btn" class="text-color-secondary text-2xl font-bold">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button id="export-txt-btn" class="btn btn-secondary w-full">Exportar a TXT</button>
+                <button id="export-csv-btn" class="btn btn-secondary w-full">Exportar a CSV (Excel)</button>
+                <button id="export-pdf-btn" class="btn btn-secondary w-full">Exportar a PDF</button>
+                <button id="export-doc-btn" class="btn btn-secondary w-full">Exportar a Word</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Contenedor del Teclado Virtual -->
+    <div id="keyboard-container">
+        <div class="simple-keyboard"></div>
+    </div>
+
+    <!-- Scripts Externos y Propios -->
+    <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    
+    <!-- JavaScript Integrado -->
+    <script>
+        // --- Lógica de Datos ---
+        const defaultProvidersData = {
+            "BOLAÑOS": ["CHOPPED CRISMONA", "DELISANDWICH", "IBERITOS", "PAVO CON OLIVAS"],
+            "CAMPOFRIO": ["CHOPEED DE LATA CAMPOFRIO", "CHORIZO REVILLA", "GAZPACHO ALVALLE", "JAMON COCIDO PAVO", "JAMONGUS SALCHICHAS", "MAXI PECHUGA PAVO", "MINI-FUETT", "MORTADELA ITALIANA", "PALETA COCIDA SANDWICH", "PÀTE 3 SABORES", "PECHUGA DE PAVO", "PECHUGA PAVO BRASEADA", "SALCHICHAS CAMPESAN", "SALCHICHAS NORMALES", "SALCHICHAS OSCAR MAYER", "SALCHICHON CUMBRE REAL", "TAQUITOS JAMON", "TIRAS DE JAMON", "TRANCHETTES"],
+            "DIALVAL": ["BACALAO 30/40 PARTIDO", "BOLSAS PEQUEÑAS PLASTICO", "CENTROS JAMON", "CHOPPED CRISMONA", "LOMO DE SAJONIA", "LOMO RESERVA ESPAÑA", "PAPEL PARAFINADO", "ROLLOS TERMICOS ORDENADOR", "ROLLOS TERMICOS PESAR", "SALCHICHON CUMBRE REAL", "SALCHICHON ROLFO", "TARRINA GRANDE ACEITUNAS", "TARRINA H24 LONCHEADO", "TARRINA PEQUEÑA ACEITUNAS", "TOMATE CIDACOS CUBITO G", "TOMATE CIDACOS CUBITO P", "TOMATE CIDACOS ENTERO G", "TOMATE CIDACOS ENTERO P", "TOMATE CIDACOS TRITURADO G", "TOMATE CIDACOS TRITURADO P"],
+            "DONOSO": ["ANCHODINA", "CHOPPED CRISMONA", "IMPERIAL EL POZO", "JAMON DE CEBO", "MORTADELA DE ACEITUNAS", "PAVO TRUFADO", "QUESO DE BURGOS X 2", "QUESO DE BURGOS X 3", "QUESO FRUTOS SECOS", "QUESO VENTERO", "SALMON AHUMADO", "TORREZNOS"],
+            "EL POZO": ["IMPERIAL CLASICA", "JAMON YORK MAXI", "MORTADELA PAVO", "MORTADELA PAVO ACEITUNAS", "PAVO SANDWICH"],
+            "FRUTA": ["AJOS", "CASTAÑAS", "CEBOLLAS", "CIRUELAS AMARILLAS", "CIRUELAS ROJAS", "GRANADAS", "KAKIS", "KIWIS", "LIMONES", "MANDARINAS", "MANDARINAS RAMA", "MANZANAS FUJI", "MANZANAS GOLDEN", "MANZANAS NACIONAL", "MELON", "NARANJAS", "NARANJAS ZUMO", "PATATAS", "PEPINOS", "PERAS AGUA", "PERAS CONFERENCIA", "PERAS VERANO", "PIMIENTOS ROJOS", "PIMIENTOS VERDES", "PLATANOS", "PUERROS", "SANDIA", "TOMATES LISOS", "TOMATES RA", "TOMATES RAMA", "ZANAHORIAS", "CALABACIN", "ICEBERG", "COGOLLOS", "CHIRIMOYA", "kakis"],
+            "LA RODA": ["AGRADO CHAMPU", "AGUARRAS JAFEP", "AMBIPUR 3VOLUTION", "ASEVI LAVALANAS", "FRIEGASUELOS ABUELA", "NICKY PAÑUELOS", "OCEDAR", "SERVILletas CELLIO"],
+            "LOS GALANES": ["ACHORIZADO", "CHOPPED CRISMONA", "CHORIZO CASERO", "CHORIZO IBERICO", "CINTA LOMO ADOBADA", "LOMO BELLOTA", "LOMO CEBO", "QUESO ACEITE", "SALCHICHON DE PAVO", "SALCHICHON IBERICO", "SALCHICHON ROLFO"],
+            "MUSICO": ["ALCACHOFAS 400G", "ALMEJAS DEL PACIFICO 450GR FROXA", "ALMEJAS DEL PACIFICO FROXA 1KG", "ANILLA DE CALAMAR ENHARINADA MEGAMAR 500G", "ANILLA DE POTA FINAMAR 550GR", "ARROZ 3 DELICIAS", "BACALADILLA", "BACALAO", "BOCAPIZZA BACON", "BOCAPIZZA JAMON YORK", "BOQUERONES", "BOQUERONES CONGELADOS 1KG", "CROQUETAS DE JAMON SERRANO 500GR", "ENSALADILLA EXTRA 1KG", "ENSALADILLA EXTRA 400GR", "ESPINACAS MAHESO 400GR", "FILETES MERLUZA PESCANOVA BABY 400GR", "FILETES MERLUZA SIN PIEL EL MUSICO 0,8KG", "GAMBA PELADA CRUDA 1KG", "GAMBA PELADA EGUILLEN 30/50 600GR", "GAMBAS ARROCERAS", "GAMBAS GABARDINA CLAVO 500GR", "GUISANTES EXTRAFINOS 1KG", "GUISANTES EXTRAFINOS 400GR", "JUDIAS VERDES PLANA 400G", "JUDIAS VERDES PLANAS 1KG", "LUBINA", "MAHESITOS JAMON SERRANO 500GR", "MENESTRA IMPERIAL 1KG", "MENESTRA IMPERIAL 400GR", "MINIEMPANADILLAS DE ATUN MAESO 330GR", "NUGGETS DE POLLO FRIPOZO 300GR", "PATATAS PREFITAS MAHESO 1KG", "PESKITOS", "PREPARADO DE PAELLA CASTELLAR 340GR", "REVOLTILLO DE AJETES MAHESO 500GR", "SAN JACOBOS CLAVO", "SOPA MARISCO EXTRA BASCONA 400GR", "TEMPURA", "TEMPURA VERDURAS 400G", "TRONQUITO DE SURIMI FROXA 250GR", "arroz 3 delicias"],
+            "TOLEDO": ["EMPANADA", "JAMON COCIDO RESERVA", "LUNCH DE PAVO", "MORTADELA SICILIANA", "PALETA COCIDA", "PAVO A LAS FINAS HIERBAS", "PIC KAMPER", "PIC KAMPER PAVO", "SALAMI"],
+        };
+        let providersData = {};
+        let orderHistory = {};
+
+        // Helper para convertir array de strings a array de objetos
+        function convertToObjectArray(arr) {
+            return arr.map(item => (typeof item === 'string') ? { name: item, quantity: 0 } : { ...item, quantity: item.quantity || 0 });
+        }
+
+        function saveData() {
+            localStorage.setItem('myProvidersData', JSON.stringify(providersData));
+        }
+
+        function loadData() {
+            let savedData = localStorage.getItem('myProvidersData');
+            
+            if (!savedData || Object.keys(JSON.parse(savedData)).length === 0) {
+                 // Cargar datos por defecto y convertirlos
+                 providersData = Object.keys(defaultProvidersData).reduce((acc, key) => {
+                    acc[key] = convertToObjectArray(defaultProvidersData[key]);
+                    return acc;
+                }, {});
+            } else {
+                // Cargar datos guardados y migrarlos si es necesario
+                 providersData = JSON.parse(savedData);
+                 for (const provider in providersData) {
+                    // Si encontramos datos antiguos (array de strings), los convertimos
+                    if (providersData[provider].length > 0 && typeof providersData[provider][0] === 'string') {
+                        providersData[provider] = convertToObjectArray(providersData[provider]);
+                    }
+                }
+            }
+        }
+        
+        function saveOrderHistory() {
+            localStorage.setItem('myProvidersOrderHistory', JSON.stringify(orderHistory));
+        }
+
+        function loadOrderHistory() {
+            const savedHistory = localStorage.getItem('myProvidersOrderHistory');
+            orderHistory = savedHistory ? JSON.parse(savedHistory) : {};
+        }
+
+
+        // --- Inicialización de la aplicación ---
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Elementos del DOM ---
+            const providerButtonsContainer = document.getElementById('provider-buttons');
+            const productList = document.getElementById('product-list');
+            const providerNameDisplay = document.getElementById('provider-name');
+            const addProductForm = document.getElementById('add-product-form');
+            const newProductNameInput = document.getElementById('new-product-name');
+            const addProviderForm = document.getElementById('add-provider-form');
+            const newProviderNameInput = document.getElementById('new-provider-name');
+            const keyboardContainer = document.getElementById('keyboard-container');
+            const productActions = document.getElementById('product-actions');
+            const saveOrderBtn = document.getElementById('save-order-btn');
+            const resetQuantitiesBtn = document.getElementById('reset-quantities-btn');
+            const historyBtn = document.getElementById('history-btn');
+            const addProviderBtn = document.getElementById('add-provider-btn');
+            const resetAllBtn = document.getElementById('reset-all-btn');
+            const deleteProviderBtn = document.getElementById('delete-provider-btn');
+            const resetProvidersBtn = document.getElementById('reset-providers-btn');
+            
+            // Modales
+            const addProviderModal = document.getElementById('add-provider-modal');
+            const closeAddProviderModalBtn = document.getElementById('close-add-provider-modal-btn');
+            const historyModal = document.getElementById('history-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const historyList = document.getElementById('history-list');
+            const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+            const deleteModalText = document.getElementById('delete-modal-text');
+            const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+            const viewOrderModal = document.getElementById('view-order-modal');
+            const viewOrderTitle = document.getElementById('view-order-title');
+            const viewOrderList = document.getElementById('view-order-list');
+            const closeViewOrderModalBtn = document.getElementById('close-view-order-modal-btn');
+            const cancelViewOrderBtn = document.getElementById('cancel-view-order-btn');
+            const continueOrderBtn = document.getElementById('continue-order-btn');
+            const exportModal = document.getElementById('export-modal');
+            const closeExportModalBtn = document.getElementById('close-export-modal-btn');
+            const showExportModalBtn = document.getElementById('show-export-modal-btn');
+            const exportTxtBtn = document.getElementById('export-txt-btn');
+            const exportCsvBtn = document.getElementById('export-csv-btn');
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            const exportDocBtn = document.getElementById('export-doc-btn');
+            const printBtn = document.getElementById('print-btn');
+
+            let currentSubmitHandler = null;
+            let currentSaveOrderHandler = null;
+            let currentResetHandler = null;
+            let currentDeleteHandler = null;
+            let activeInput = null;
+            
+            // --- Forzar Modo Oscuro ---
+            function setDarkMode() {
+                document.body.classList.add('dark-mode');
+            }
+
+            // --- Lógica del Teclado Virtual ---
+            const Keyboard = window.SimpleKeyboard.default;
+            const keyboard = new Keyboard({
+                onChange: input => onKeyboardChange(input),
+                onKeyPress: button => onKeyPress(button),
+                layout: {
+                    'default': ['q w e r t y u i o p', 'a s d f g h j k l ñ', '{shift} z x c v b n m {backspace}', '{space} {enter}'],
+                    'shift': ['Q W E R T Y U I O P', 'A S D F G H J K L Ñ', '{shift} Z X C V B N M {backspace}', '{space} {enter}']
+                },
+                display: {'{backspace}': 'Borrar', '{enter}': 'Enter', '{shift}': 'Mayús', '{space}': 'Espacio'}
+            });
+
+            function onKeyboardChange(input) { if (activeInput) activeInput.value = input; }
+            function onKeyPress(button) {
+                if (button === "{shift}" || button === "{lock}") {
+                    const currentLayout = keyboard.options.layoutName;
+                    keyboard.setOptions({ layoutName: currentLayout === "default" ? "shift" : "default" });
+                }
+                if (button === "{enter}" && activeInput) {
+                    activeInput.form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    hideKeyboard();
+                }
+            }
+            function showKeyboard(event) {
+                activeInput = event.target;
+                if(activeInput.type !== 'number'){
+                    keyboard.setInput(activeInput.value);
+                    keyboardContainer.classList.add('visible');
+                }
+            }
+            function hideKeyboard() {
+                activeInput = null;
+                keyboardContainer.classList.remove('visible');
+            }
+            newProviderNameInput.addEventListener('focus', showKeyboard);
+            newProductNameInput.addEventListener('focus', showKeyboard);
+            document.addEventListener('click', (event) => {
+                if (activeInput && !activeInput.contains(event.target) && !keyboardContainer.contains(event.target)) {
+                    hideKeyboard();
+                }
+            });
+
+            // --- Lógica de la Aplicación ---
+            function renderProviderButtons() {
+                providerButtonsContainer.innerHTML = '';
+                const providerNames = Object.keys(providersData).sort((a, b) => a.localeCompare(b));
+                if (providerNames.length === 0) {
+                    providerButtonsContainer.innerHTML = '<p class="text-color-secondary italic">No hay proveedores. Añade uno para empezar.</p>';
+                    return;
+                }
+                providerNames.forEach(providerName => {
+                    const button = document.createElement('button');
+                    button.textContent = providerName;
+                    button.className = 'btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
+                    button.addEventListener('click', () => displayProducts(providerName));
+                    providerButtonsContainer.appendChild(button);
+                });
+            }
+            
+            function resetProductDisplay() {
+                providerNameDisplay.textContent = 'Selecciona un proveedor';
+                productList.innerHTML = '<li class="italic p-2">Los productos aparecerán aquí...</li>';
+                productActions.classList.add('hidden');
+                deleteProviderBtn.classList.add('hidden');
+                renderSelectedProductsList(); // Limpia el resumen
+            }
+
+            function displayProducts(providerName) {
+                hideKeyboard();
+                const products = providersData[providerName];
+                productList.innerHTML = '';
+                providerNameDisplay.textContent = `Productos de ${providerName}`;
+                
+                if (products && products.length > 0) {
+                    products.forEach((product, index) => {
+                        const listItem = document.createElement('li');
+                        // Aplica la clase small-text si es FRUTA
+                        listItem.className = 'flex items-center gap-2 p-2 rounded-lg' + (providerName === 'FRUTA' ? ' small-text' : '');
+                        if (product.quantity > 0) {
+                             listItem.classList.add('selected-product');
+                        }
+
+                        const productNameSpan = document.createElement('span');
+                        productNameSpan.textContent = product.name;
+                        productNameSpan.className = (providerName === 'FRUTA' ? 'flex-grow text-color small-text' : 'flex-grow text-color');
+                        
+                        const rightSideContainer = document.createElement('div');
+                        rightSideContainer.className = 'flex items-center gap-2 flex-shrink-0';
+
+                        const quantitySelector = document.createElement('div');
+                        quantitySelector.className = 'quantity-selector';
+
+                        const minusBtn = document.createElement('button');
+                        minusBtn.textContent = '-';
+                        minusBtn.className = 'quantity-btn';
+                        minusBtn.onclick = () => {
+                            if (product.quantity > 0) {
+                                product.quantity--;
+                                saveData();
+                                renderSelectedProductsList(providerName);
+                                displayProducts(providerName);
+                            }
+                        };
+
+                        const quantityInput = document.createElement('input');
+                        quantityInput.type = 'number';
+                        quantityInput.value = product.quantity;
+                        quantityInput.min = 0;
+                        quantityInput.className = 'input-field quantity-input';
+                        quantityInput.onchange = (e) => {
+                            const value = parseInt(e.target.value, 10);
+                            product.quantity = !isNaN(value) && value >= 0 ? value : 0;
+                            saveData();
+                            renderSelectedProductsList(providerName);
+                            displayProducts(providerName);
+                        };
+                         quantityInput.addEventListener('focus', (e) => {
+                             if(keyboardContainer.classList.contains('visible')) hideKeyboard();
+                         });
+
+                        const plusBtn = document.createElement('button');
+                        plusBtn.textContent = '+';
+                        plusBtn.className = 'quantity-btn';
+                        plusBtn.onclick = () => {
+                            product.quantity++;
+                            saveData();
+                            renderSelectedProductsList(providerName);
+                            displayProducts(providerName);
+                        };
+                        
+                        const deleteProductBtn = document.createElement('button');
+                        deleteProductBtn.innerHTML = '&times;';
+                        deleteProductBtn.title = 'Eliminar producto';
+                        deleteProductBtn.className = 'w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold text-red-400 hover:bg-red-500 hover:text-white transition-colors';
+                        deleteProductBtn.onclick = () => {
+                            providersData[providerName].splice(index, 1);
+                            saveData();
+                            renderSelectedProductsList(providerName);
+                            displayProducts(providerName);
+                        };
+
+                        quantitySelector.appendChild(minusBtn);
+                        quantitySelector.appendChild(quantityInput);
+                        quantitySelector.appendChild(plusBtn);
+                        
+                        rightSideContainer.appendChild(quantitySelector);
+                        rightSideContainer.appendChild(deleteProductBtn);
+
+                        listItem.appendChild(productNameSpan);
+                        listItem.appendChild(rightSideContainer);
+                        productList.appendChild(listItem);
+                    });
+                } else {
+                    productList.innerHTML = '<li class="italic p-2 text-color-secondary">Este proveedor aún no tiene productos.</li>';
+                }
+                productActions.classList.remove('hidden');
+                deleteProviderBtn.classList.remove('hidden');
+
+                if (currentSubmitHandler) addProductForm.removeEventListener('submit', currentSubmitHandler);
+                currentSubmitHandler = (event) => {
+                    event.preventDefault();
+                    const newProduct = newProductNameInput.value.trim().toUpperCase();
+                    if (newProduct) {
+                        const exists = providersData[providerName].some(p => p.name === newProduct);
+                        if (!exists) {
+                            providersData[providerName].push({ name: newProduct, quantity: 1 });
+                            saveData();
+                            renderSelectedProductsList(providerName);
+                        }
+                        newProductNameInput.value = '';
+                        keyboard.clearInput();
+                        displayProducts(providerName);
+                    }
+                };
+                addProductForm.addEventListener('submit', currentSubmitHandler);
+                
+                if (currentSaveOrderHandler) saveOrderBtn.removeEventListener('click', currentSaveOrderHandler);
+                currentSaveOrderHandler = () => saveCurrentOrder(providerName);
+                saveOrderBtn.addEventListener('click', currentSaveOrderHandler);
+                
+                if(currentResetHandler) resetQuantitiesBtn.removeEventListener('click', currentResetHandler);
+                currentResetHandler = () => {
+                    providersData[providerName].forEach(p => p.quantity = 0);
+                    saveData();
+                    renderSelectedProductsList(providerName);
+                    displayProducts(providerName);
+                };
+                resetQuantitiesBtn.addEventListener('click', currentResetHandler);
+                
+                if(currentDeleteHandler) deleteProviderBtn.removeEventListener('click', currentDeleteHandler);
+                currentDeleteHandler = () => showDeleteConfirmModal(providerName);
+                deleteProviderBtn.addEventListener('click', currentDeleteHandler);
+
+                updateActiveButton(providerName);
+                renderSelectedProductsList(providerName);
+            }
+
+
+            function updateActiveButton(activeProviderName) {
+                const buttons = providerButtonsContainer.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.classList.toggle('active-provider', button.textContent === activeProviderName);
+                });
+            }
+
+            function renderSelectedProductsList(providerName) {
+                const selectedListContainer = document.getElementById('selected-products-list');
+                selectedListContainer.innerHTML = '';
+                
+                if (!providerName || !providersData[providerName]) {
+                    selectedListContainer.innerHTML = '<li class="italic text-color-secondary">Selecciona un proveedor para ver el resumen de su pedido.</li>';
+                    return;
+                }
+
+                const selectedProducts = providersData[providerName].filter(p => p.quantity > 0);
+
+                if (selectedProducts.length > 0) {
+                    selectedProducts.forEach(product => {
+                        const productItem = document.createElement('li');
+                        productItem.className = 'flex justify-between items-center text-color-secondary p-1';
+                        productItem.innerHTML = `
+                            <span>${product.name}</span>
+                            <span class="font-bold text-color">${product.quantity}</span>
+                        `;
+                        selectedListContainer.appendChild(productItem);
+                    });
+                } else {
+                    selectedListContainer.innerHTML = '<li class="italic text-color-secondary">No hay productos seleccionados para este proveedor.</li>';
+                }
+            }
+
+            addProviderForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const newProviderName = newProviderNameInput.value.trim().toUpperCase();
+                if (newProviderName && !providersData.hasOwnProperty(newProviderName)) {
+                    providersData[newProviderName] = [];
+                    saveData();
+                    newProviderNameInput.value = '';
+                    keyboard.clearInput();
+                    renderProviderButtons();
+                    addProviderModal.classList.remove('visible');
+                } else if (providersData.hasOwnProperty(newProviderName)) {
+                    console.warn("El proveedor ya existe.");
+                }
+            });
+            
+            // --- Lógica del Historial de Pedidos ---
+            function saveCurrentOrder(providerName) {
+                 const productsToSave = providersData[providerName].filter(p => p.quantity > 0);
+                 
+                 if (productsToSave.length === 0) {
+                    const originalText = saveOrderBtn.textContent;
+                    saveOrderBtn.textContent = '¡Nada que guardar!';
+                    saveOrderBtn.classList.remove('btn-primary');
+                    saveOrderBtn.classList.add('bg-red-500');
+                    setTimeout(() => {
+                        saveOrderBtn.textContent = originalText;
+                        saveOrderBtn.classList.remove('bg-red-500');
+                        saveOrderBtn.classList.add('btn-primary');
+                    }, 2000);
+                    return;
+                 }
+
+                 const today = new Date();
+                 const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                 const orderKey = `${dateString} - ${providerName}`;
+                 
+                 orderHistory[orderKey] = JSON.parse(JSON.stringify(productsToSave));
+                 saveOrderHistory();
+                 
+                 const originalText = saveOrderBtn.textContent;
+                 saveOrderBtn.textContent = '¡Guardado!';
+                 saveOrderBtn.classList.remove('btn-primary');
+                 saveOrderBtn.classList.add('bg-green-500');
+                 setTimeout(() => {
+                    saveOrderBtn.textContent = originalText;
+                    saveOrderBtn.classList.remove('bg-green-500');
+                    saveOrderBtn.classList.add('btn-primary');
+                 }, 1500);
+            }
+            
+            resetAllBtn.addEventListener('click', () => {
+                for (const provider in providersData) {
+                    providersData[provider].forEach(product => {
+                        product.quantity = 0;
+                    });
+                }
+                saveData();
+                const activeButton = providerButtonsContainer.querySelector('.active-provider');
+                if (activeButton) {
+                    displayProducts(activeButton.textContent);
+                } else {
+                    renderSelectedProductsList();
+                }
+            });
+
+            function renderHistoryList() {
+                historyList.innerHTML = '';
+                const historyKeys = Object.keys(orderHistory).sort().reverse();
+
+                if (historyKeys.length === 0) {
+                    historyList.innerHTML = `<p class="text-color-secondary italic">No hay pedidos guardados.</p>`;
+                    return;
+                }
+
+                historyKeys.forEach(key => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'bg-inner p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3';
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = key;
+                    textSpan.className = 'text-color font-medium';
+                    
+                    const buttonsDiv = document.createElement('div');
+                    buttonsDiv.className = 'flex gap-2 flex-shrink-0';
+                    
+                    const viewBtn = document.createElement('button');
+                    viewBtn.textContent = 'Ver Pedido';
+                    viewBtn.className = 'btn btn-secondary text-sm !py-2 !px-3';
+                    viewBtn.onclick = () => showViewOrderModal(key);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Eliminar';
+                    deleteBtn.className = 'btn btn-tertiary text-sm !py-2 !px-3';
+                    deleteBtn.onclick = () => {
+                        delete orderHistory[key];
+                        saveOrderHistory();
+                        
+                        // Cerrar modal y volver a la pantalla principal
+                        historyModal.classList.remove('visible');
+                        resetProductDisplay();
+                        updateActiveButton(null); // Deseleccionar proveedor activo
+                    };
+
+                    buttonsDiv.appendChild(viewBtn);
+                    buttonsDiv.appendChild(deleteBtn);
+                    itemDiv.appendChild(textSpan);
+                    itemDiv.appendChild(buttonsDiv);
+                    historyList.appendChild(itemDiv);
+                });
+            }
+
+            function showViewOrderModal(orderKey) {
+                const providerName = orderKey.split(' - ')[1];
+                const savedOrder = orderHistory[orderKey];
+
+                if (!providersData.hasOwnProperty(providerName) || !savedOrder) {
+                    console.error("No se pudo encontrar el proveedor o el pedido.");
+                    return;
+                }
+
+                viewOrderTitle.textContent = `Pedido: ${orderKey}`;
+                viewOrderList.innerHTML = ''; 
+
+                savedOrder.forEach(product => {
+                    const productItem = document.createElement('div');
+                    productItem.className = 'flex justify-between items-center text-color-secondary p-1';
+                    productItem.innerHTML = `
+                        <span>${product.name}</span>
+                        <span class="font-bold text-color">${product.quantity}</span>
+                    `;
+                    viewOrderList.appendChild(productItem);
+                });
+
+                continueOrderBtn.onclick = () => {
+                    providersData[providerName].forEach(p => p.quantity = 0);
+                    
+                    savedOrder.forEach(savedProduct => {
+                        const currentProduct = providersData[providerName].find(p => p.name === savedProduct.name);
+                        if (currentProduct) {
+                            currentProduct.quantity = savedProduct.quantity;
+                        } else {
+                            providersData[providerName].push(JSON.parse(JSON.stringify(savedProduct)));
+                        }
+                    });
+
+                    saveData();
+                    displayProducts(providerName);
+                    
+                    viewOrderModal.classList.remove('visible');
+                    historyModal.classList.remove('visible');
+                };
+
+                viewOrderModal.classList.add('visible');
+            }
+            
+            // --- Lógica de Modales ---
+            addProviderBtn.addEventListener('click', () => {
+                addProviderModal.classList.add('visible');
+                newProviderNameInput.focus();
+            });
+            closeAddProviderModalBtn.addEventListener('click', () => addProviderModal.classList.remove('visible'));
+            addProviderModal.addEventListener('click', (event) => {
+                if(event.target === addProviderModal) {
+                    addProviderModal.classList.remove('visible');
+                }
+            });
+            
+            historyBtn.addEventListener('click', () => {
+                renderHistoryList();
+                historyModal.classList.add('visible');
+            });
+            closeModalBtn.addEventListener('click', () => historyModal.classList.remove('visible'));
+            historyModal.addEventListener('click', (event) => {
+                if(event.target === historyModal) {
+                     historyModal.classList.remove('visible');
+                }
+            });
+
+            function showDeleteConfirmModal(providerName) {
+                deleteModalText.textContent = `¿Estás seguro de que quieres eliminar a "${providerName}"? Se borrarán todos sus productos y su historial de pedidos.`;
+                deleteConfirmModal.classList.add('visible');
+                
+                confirmDeleteBtn.onclick = () => {
+                    delete providersData[providerName];
+                    saveData();
+                    
+                    Object.keys(orderHistory).forEach(key => {
+                        if (key.endsWith(` - ${providerName}`)) {
+                            delete orderHistory[key];
+                        }
+                    });
+                    saveOrderHistory();
+                    
+                    renderProviderButtons();
+                    resetProductDisplay();
+                    deleteConfirmModal.classList.remove('visible');
+                };
+            }
+            
+            cancelDeleteBtn.addEventListener('click', () => deleteConfirmModal.classList.remove('visible'));
+            deleteConfirmModal.addEventListener('click', (event) => {
+                 if(event.target === deleteConfirmModal) {
+                     deleteConfirmModal.classList.remove('visible');
+                }
+            });
+
+            // Listeners para el modal de ver pedido
+            closeViewOrderModalBtn.addEventListener('click', () => viewOrderModal.classList.remove('visible'));
+            cancelViewOrderBtn.addEventListener('click', () => {
+                viewOrderModal.classList.remove('visible');
+                historyModal.classList.remove('visible');
+            });
+            viewOrderModal.addEventListener('click', (event) => {
+                if(event.target === viewOrderModal) {
+                    viewOrderModal.classList.remove('visible');
+                }
+            });
+
+            // --- Lógica de Exportación e Impresión ---
+            function showFeedbackOnButton(button, message, isError = true) {
+                const originalText = button.textContent;
+                const originalClasses = button.className;
+                button.textContent = message;
+                if (isError) {
+                    button.classList.remove('btn-secondary', 'btn-tertiary');
+                    button.classList.add('bg-red-500');
+                }
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.className = originalClasses;
+                }, 2000);
+            }
+            
+            function getOrderData() {
+                const data = [];
+                const providerKeys = Object.keys(providersData).sort((a,b) => a.localeCompare(b));
+                for (const provider of providerKeys) {
+                    const productsToExport = providersData[provider].filter(p => p.quantity > 0);
+                    if (productsToExport.length > 0) {
+                        productsToExport.forEach(product => {
+                            data.push({
+                                provider: provider,
+                                name: product.name,
+                                quantity: product.quantity
+                            });
+                        });
+                    }
+                }
+                return data;
+            }
+
+            function exportToTxt() {
+                const data = getOrderData();
+                if (data.length === 0) {
+                    showFeedbackOnButton(exportTxtBtn, "¡Nada que exportar!");
+                    return;
+                }
+
+                let textContent = "Lista de Pedidos\n=================================\n\n";
+                let currentProvider = "";
+                data.forEach(item => {
+                    if (item.provider !== currentProvider) {
+                        currentProvider = item.provider;
+                        textContent += `${currentProvider}:\n`;
+                    }
+                    textContent += `  - ${item.name} (Cantidad: ${item.quantity})\n`;
+                });
+                
+                const blob = new Blob([textContent], { type: 'text/plain' });
+                const anchor = document.createElement('a');
+                anchor.download = 'pedido.txt';
+                anchor.href = window.URL.createObjectURL(blob);
+                anchor.click();
+                window.URL.revokeObjectURL(anchor.href);
+            }
+
+            function exportToCsv() {
+                const data = getOrderData();
+                if (data.length === 0) {
+                    showFeedbackOnButton(exportCsvBtn, "¡Nada que exportar!");
+                    return;
+                }
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // \uFEFF for BOM
+                csvContent += "Proveedor,Producto,Cantidad\n";
+                data.forEach(item => {
+                    csvContent += `"${item.provider}","${item.name}","${item.quantity}"\n`;
+                });
+                
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "pedido.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            function exportToPdf() {
+                const data = getOrderData();
+                if (data.length === 0) {
+                    showFeedbackOnButton(exportPdfBtn, "¡Nada que exportar!");
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const tableColumn = ["Proveedor", "Producto", "Cantidad"];
+                const tableRows = [];
+
+                data.forEach(item => {
+                    const rowData = [item.provider, item.name, item.quantity];
+                    tableRows.push(rowData);
+                });
+
+                doc.autoTable(tableColumn, tableRows, { startY: 20 });
+                doc.text("Resumen del Pedido", 14, 15);
+                doc.save("pedido.pdf");
+            }
+
+            function exportToWord() {
+                const data = getOrderData();
+                if (data.length === 0) {
+                     showFeedbackOnButton(exportDocBtn, "¡Nada que exportar!");
+                    return;
+                }
+
+                let htmlContent = `
+                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                    <head><meta charset='utf-8'><title>Pedido</title></head>
+                    <body>
+                    <h1>Resumen del Pedido</h1>
+                    <table border="1" style="border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Proveedor</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.forEach(item => {
+                    htmlContent += `
+                        <tr>
+                            <td>${item.provider}</td>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                        </tr>
+                    `;
+                });
+
+                htmlContent += `</tbody></table></body></html>`;
+
+                const blob = new Blob(['\ufeff', htmlContent], {
+                    type: 'application/msword'
+                });
+                
+                const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(htmlContent);
+                const downloadLink = document.createElement("a");
+                document.body.appendChild(downloadLink);
+                downloadLink.href = url;
+                downloadLink.download = 'pedido.doc';
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            }
+            
+            function printOrder() {
+                const data = getOrderData();
+                if (data.length === 0) {
+                    showFeedbackOnButton(printBtn, "¡Nada que imprimir!");
+                    return;
+                }
+
+                let printContent = `
+                    <html>
+                    <head>
+                        <title>Pedido</title>
+                        <style>
+                            body { font-family: sans-serif; }
+                            h1 { text-align: center; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Resumen del Pedido</h1>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Proveedor</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.forEach(item => {
+                    printContent += `
+                        <tr>
+                            <td>${item.provider}</td>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                        </tr>
+                    `;
+                });
+
+                printContent += `
+                            </tbody>
+                        </table>
+                    </body>
+                    </html>
+                `;
+
+                const printFrame = document.createElement('iframe');
+                printFrame.style.position = 'absolute';
+                printFrame.style.width = '0';
+                printFrame.style.height = '0';
+                printFrame.style.border = '0';
+                document.body.appendChild(printFrame);
+
+                const frameDoc = printFrame.contentWindow.document;
+                frameDoc.open();
+                frameDoc.write(printContent);
+                frameDoc.close();
+
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                
+                setTimeout(() => {
+                    document.body.removeChild(printFrame);
+                }, 1000);
+            }
+
+            showExportModalBtn.addEventListener('click', () => exportModal.classList.add('visible'));
+            closeExportModalBtn.addEventListener('click', () => exportModal.classList.remove('visible'));
+            exportModal.addEventListener('click', (e) => {
+                if (e.target === exportModal) exportModal.classList.remove('visible');
+            });
+            
+            printBtn.addEventListener('click', printOrder);
+            exportTxtBtn.addEventListener('click', exportToTxt);
+            exportCsvBtn.addEventListener('click', exportToCsv);
+            exportPdfBtn.addEventListener('click', exportToPdf);
+            exportDocBtn.addEventListener('click', exportToWord);
+
+            resetProvidersBtn.addEventListener('click', () => {
+                if (confirm('¿Estás seguro de que quieres restablecer la lista de proveedores a la original? Se perderán todos los proveedores y productos que hayas añadido manualmente.')) {
+                    localStorage.removeItem('myProvidersData');
+                    localStorage.removeItem('myProvidersOrderHistory');
+                    // Recargar la página para aplicar los datos por defecto
+                    window.location.reload();
+                }
+            });
+
+            // --- Carga Inicial ---
+            loadData();
+            loadOrderHistory();
+            setDarkMode(); // Aplicar modo oscuro al cargar
+            renderProviderButtons();
+            renderSelectedProductsList();
+        });
+    </script>
+
+</body>
+</html>
