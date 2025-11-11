@@ -379,7 +379,8 @@
     <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://apis.google.com/js/api.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 
 
     
@@ -1358,17 +1359,6 @@
             setDarkMode(); // Aplicar modo oscuro al cargar
             renderProviderButtons();
             renderSelectedProductsList();
-
-            // Cargar scripts de Google
-            const gapiScript = document.createElement('script');
-            gapiScript.src = 'https://apis.google.com/js/api.js';
-            gapiScript.onload = gapiLoaded;
-            document.body.appendChild(gapiScript);
-
-            const gisScript = document.createElement('script');
-            gisScript.src = 'https://accounts.google.com/gsi/client';
-            gisScript.onload = gisLoaded;
-            document.body.appendChild(gisScript);
         });
     </script>
 
