@@ -8,6 +8,7 @@
     "CAMPOFRIO": [
         "CHOPEED DE LATA CAMPOFRIO",
         "CHORIZO REVILLA",
+        "CODILLO ASADO"
         "GAZPACHO ALVALLE",
         "JAMON COCIDO PAVO",
         "JAMONGUS SALCHICHAS",
@@ -24,8 +25,7 @@
         "SALCHICHON CUMBRE REAL",
         "TAQUITOS JAMON",
         "TIRAS DE JAMON",
-        "TRANCHETTES",
-        "CODILLO ASADO"
+        "TRANCHETTES"
     ],
     "DIALVAL": [
         "BACALAO 30/40 PARTIDO",
@@ -170,11 +170,9 @@
         "REVOLTILLO DE AJETES MAHESO 500GR",
         "SAN JACOBOS CLAVO",
         "SOPA MARISCO EXTRA BASCONA 400GR",
-        "TEMPURA",
         "TEMPURA VERDURAS 400G",
-        "TRONQUITO DE SURIMI FROXA 250GR",
-        "arroz 3 delicias"
-    ],
+        "TRONQUITO DE SURIMI FROXA 250GR"
+     ],
     "TOLEDO": [
         "EMPANADA",
         "JAMON COCIDO RESERVA",
