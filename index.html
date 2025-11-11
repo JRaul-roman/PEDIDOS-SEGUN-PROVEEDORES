@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -238,7 +237,8 @@
     <div class="container mx-auto p-2 sm:p-3 lg:p-4">
         <header class="grid grid-cols-2 items-center mb-6">
             <h1 class="text-3xl sm:text-4xl font-bold title-text" style="color: white;">PROVEEDORES</h1>
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-2">
+                <button id="auth-btn" class="btn btn-primary mt-2 sm:mt-0 btn-small">Iniciar Sesión con Google</button>
                 <button id="history-btn" class="btn btn-secondary mt-2 sm:mt-0 btn-small">Historial de Pedidos</button>
             </div>
         </header>
@@ -364,6 +364,7 @@
                 <button id="export-csv-btn" class="btn btn-secondary w-full">Exportar a CSV (Excel)</button>
                 <button id="export-pdf-btn" class="btn btn-secondary w-full">Exportar a PDF</button>
                 <button id="export-doc-btn" class="btn btn-secondary w-full">Exportar a Word</button>
+                <button id="export-drive-btn" class="btn btn-primary w-full col-span-1 sm:col-span-2">Guardar en Google Drive</button>
             </div>
         </div>
     </div>
@@ -378,12 +379,179 @@
     <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
 
 
     
     <!-- JavaScript Integrado -->
     <script>
-        // --- Lógica de Datos ---
+        // --- Lógica de Google Drive --- 
+        // =======================================================================
+        // == PEGA TUS CREDENCIALES DE GOOGLE AQUÍ ===============================
+        // =======================================================================
+        const CLIENT_ID = '1045524116395-on5ucmu8p91r415ambrnnim1bnd9qv6o.apps.googleusercontent.com'; // <-- REEMPLAZA ESTO
+        const API_KEY = 'AIzaSyAzuy0JrrAX0e0yxzQwBEznzG_dA5MkgF0';     // <-- REEMPLAZA ESTO
+        // =======================================================================
+        // =======================================================================
+        const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        const FOLDER_NAME = 'Pedidos Proveedores App';
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: DISCOVERY_DOCS,
+            });
+            gapiInited = true;
+            maybeEnableButtons();
+        }
+
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // Define callback below
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+
+        function maybeEnableButtons() {
+            if (gapiInited && gisInited) {
+                document.getElementById('auth-btn').style.visibility = 'visible';
+            }
+        }
+
+        function handleAuthClick() {
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    throw (resp);
+                }
+                document.getElementById('auth-btn').innerText = 'Sesión Iniciada';
+                document.getElementById('auth-btn').disabled = true;
+                await listFiles(); // Opcional: para verificar que funciona
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+                tokenClient.requestAccessToken({prompt: ''});
+            }
+        }
+
+        function handleSignoutClick() {
+            const token = gapi.client.getToken();
+            if (token !== null) {
+                google.accounts.oauth2.revoke(token.access_token);
+                gapi.client.setToken('');
+                document.getElementById('auth-btn').innerText = 'Iniciar Sesión con Google';
+                document.getElementById('auth-btn').disabled = false;
+            }
+        }
+        
+        async function getOrCreateFolder() {
+            let folderId = null;
+            try {
+                const response = await gapi.client.drive.files.list({
+                    q: `mimeType='application/vnd.google-apps.folder' and name='${FOLDER_NAME}' and trashed=false`,
+                    fields: 'files(id, name)',
+                });
+                
+                if (response.result.files.length > 0) {
+                    folderId = response.result.files[0].id;
+                } else {
+                    const folderMetadata = {
+                        'name': FOLDER_NAME,
+                        'mimeType': 'application/vnd.google-apps.folder'
+                    };
+                    const request = await gapi.client.drive.files.create({
+                        resource: folderMetadata,
+                        fields: 'id'
+                    });
+                    folderId = request.result.id;
+                }
+                return folderId;
+            } catch (error) {
+                console.error("Error al obtener o crear la carpeta de Drive:", error);
+                return null;
+            }
+        }
+
+        async function uploadToDrive() {
+            const data = getOrderData();
+            if (data.length === 0) {
+                showFeedbackOnButton(document.getElementById('export-drive-btn'), "¡Nada que guardar!");
+                return;
+            }
+            if (gapi.client.getToken() === null) {
+                showFeedbackOnButton(document.getElementById('export-drive-btn'), "Inicia sesión primero");
+                return;
+            }
+
+            let textContent = "Lista de Pedidos\n=================================\n\n";
+            let currentProvider = "";
+            data.forEach(item => {
+                if (item.provider !== currentProvider) {
+                    currentProvider = item.provider;
+                    textContent += `${currentProvider}:\n`;
+                }
+                textContent += `  - ${item.name} (Cantidad: ${item.quantity})\n`;
+            });
+
+            const folderId = await getOrCreateFolder();
+            if (!folderId) {
+                showFeedbackOnButton(document.getElementById('export-drive-btn'), "Error con la carpeta");
+                return;
+            }
+
+            const today = new Date();
+            const fileName = `Pedido_${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}.txt`;
+            
+            const boundary = '-------314159265358979323846';
+            const delimiter = "\r\n--" + boundary + "\r\n";
+            const close_delim = "\r\n--" + boundary + "--";
+
+            const metadata = {
+                name: fileName,
+                mimeType: 'text/plain',
+                parents: [folderId]
+            };
+
+            const multipartRequestBody =
+                delimiter +
+                'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                JSON.stringify(metadata) +
+                delimiter +
+                'Content-Type: text/plain; charset=UTF-8\r\n\r\n' +
+                textContent +
+                close_delim;
+
+            try {
+                const request = await gapi.client.request({
+                    path: '/upload/drive/v3/files',
+                    method: 'POST',
+                    params: { uploadType: 'multipart' },
+                    headers: {
+                        'Content-Type': 'multipart/related; boundary=' + boundary
+                    },
+                    body: multipartRequestBody
+                });
+                showFeedbackOnButton(document.getElementById('export-drive-btn'), "¡Guardado en Drive!", false);
+            } catch (error) {
+                console.error("Error al subir el archivo a Drive:", error);
+                showFeedbackOnButton(document.getElementById('export-drive-btn'), "Error al subir");
+            }
+        }
+
+
+        // --- Lógica de Datos --- 
         let providersData = {};
         let orderHistory = {};
 
@@ -443,10 +611,10 @@
         }
 
 
-        // --- Inicialización de la aplicación ---
+        // --- Inicialización de la aplicación --- 
         document.addEventListener('DOMContentLoaded', async () => {
             
-            // --- Elementos del DOM ---
+            // --- Elementos del DOM --- 
             const providerButtonsContainer = document.getElementById('provider-buttons');
             const productList = document.getElementById('product-list');
             const providerNameDisplay = document.getElementById('provider-name');
@@ -463,6 +631,7 @@
             const resetAllBtn = document.getElementById('reset-all-btn');
             const deleteProviderBtn = document.getElementById('delete-provider-btn');
             const resetProvidersBtn = document.getElementById('reset-providers-btn');
+            const authBtn = document.getElementById('auth-btn');
             
             // Modales
             const addProviderModal = document.getElementById('add-provider-modal');
@@ -487,6 +656,7 @@
             const exportCsvBtn = document.getElementById('export-csv-btn');
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const exportDocBtn = document.getElementById('export-doc-btn');
+            const exportDriveBtn = document.getElementById('export-drive-btn');
             const printBtn = document.getElementById('print-btn');
 
             let currentSubmitHandler = null;
@@ -495,12 +665,12 @@
             let currentDeleteHandler = null;
             let activeInput = null;
             
-            // --- Forzar Modo Oscuro ---
+            // --- Forzar Modo Oscuro --- 
             function setDarkMode() {
                 document.body.classList.add('dark-mode');
             }
 
-            // --- Lógica del Teclado Virtual ---
+            // --- Lógica del Teclado Virtual --- 
             const Keyboard = window.SimpleKeyboard.default;
             const keyboard = new Keyboard({
                 onChange: input => onKeyboardChange(input),
@@ -542,7 +712,7 @@
                 }
             });
 
-            // --- Lógica de la Aplicación ---
+            // --- Lógica de la Aplicación --- 
             function renderProviderButtons() {
                 providerButtonsContainer.innerHTML = '';
                 const providerNames = Object.keys(providersData).sort((a, b) => a.localeCompare(b));
@@ -734,7 +904,7 @@
                 }
             });
             
-            // --- Lógica del Historial de Pedidos ---
+            // --- Lógica del Historial de Pedidos --- 
             function saveCurrentOrder(providerName) {
                  const productsToSave = providersData[providerName].filter(p => p.quantity > 0);
                  
@@ -874,7 +1044,7 @@
                 viewOrderModal.classList.add('visible');
             }
             
-            // --- Lógica de Modales ---
+            // --- Lógica de Modales --- 
             addProviderBtn.addEventListener('click', () => {
                 addProviderModal.classList.add('visible');
                 newProviderNameInput.focus();
@@ -937,14 +1107,17 @@
                 }
             });
 
-            // --- Lógica de Exportación e Impresión ---
+            // --- Lógica de Exportación e Impresión --- 
             function showFeedbackOnButton(button, message, isError = true) {
                 const originalText = button.textContent;
                 const originalClasses = button.className;
                 button.textContent = message;
                 if (isError) {
-                    button.classList.remove('btn-secondary', 'btn-tertiary');
+                    button.classList.remove('btn-secondary', 'btn-tertiary', 'btn-primary');
                     button.classList.add('bg-red-500');
+                } else {
+                    button.classList.remove('btn-secondary', 'btn-tertiary', 'btn-primary');
+                    button.classList.add('bg-green-500');
                 }
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -1167,6 +1340,8 @@
             exportCsvBtn.addEventListener('click', exportToCsv);
             exportPdfBtn.addEventListener('click', exportToPdf);
             exportDocBtn.addEventListener('click', exportToWord);
+            exportDriveBtn.addEventListener('click', uploadToDrive);
+            authBtn.addEventListener('click', handleAuthClick);
 
             resetProvidersBtn.addEventListener('click', () => {
                 if (confirm('¿Estás seguro de que quieres restablecer la lista de proveedores a la original? Se perderán todos los proveedores y productos que hayas añadido manualmente.')) {
@@ -1177,12 +1352,23 @@
                 }
             });
 
-            // --- Carga Inicial ---
+            // --- Carga Inicial --- 
             await loadData();
             loadOrderHistory();
             setDarkMode(); // Aplicar modo oscuro al cargar
             renderProviderButtons();
             renderSelectedProductsList();
+
+            // Cargar scripts de Google
+            const gapiScript = document.createElement('script');
+            gapiScript.src = 'https://apis.google.com/js/api.js';
+            gapiScript.onload = gapiLoaded;
+            document.body.appendChild(gapiScript);
+
+            const gisScript = document.createElement('script');
+            gisScript.src = 'https://accounts.google.com/gsi/client';
+            gisScript.onload = gisLoaded;
+            document.body.appendChild(gisScript);
         });
     </script>
 
