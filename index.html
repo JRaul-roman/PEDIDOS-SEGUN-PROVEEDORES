@@ -231,37 +231,6 @@
         .input-small {
             padding: 0.5rem;
         }
-
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #selected-products-section, #selected-products-section * {
-                visibility: visible;
-            }
-            #selected-products-section {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 1rem !important;
-                background-color: white !important;
-            }
-            #selected-products-section h2 {
-                text-align: center;
-                font-size: 2rem;
-                margin-bottom: 1.5rem;
-                color: black !important;
-            }
-            #selected-products-list li {
-                color: black !important;
-            }
-            #selected-products-list span {
-                color: black !important;
-            }
-        }
     </style>
 </head>
 <body class="pb-32">
@@ -638,18 +607,20 @@
             }
 
             if (!loadedFromSave) {
-                 try {
-                    const embeddedDataElement = document.getElementById('proveedores-data');
-                    const defaultProviders = JSON.parse(embeddedDataElement.textContent);
+                try {
+                    // Cargar desde el script incrustado en lugar de GitHub
+                    const defaultProvidersJSON = document.getElementById('proveedores-data').textContent;
+                    const defaultProviders = JSON.parse(defaultProvidersJSON);
+                    
                     providersData = Object.keys(defaultProviders).reduce((acc, key) => {
                         acc[key] = convertToObjectArray(defaultProviders[key]);
                         return acc;
                     }, {});
                     saveData();
-                 } catch (error) {
-                    console.error('Error al cargar los datos de proveedores incrustados:', error);
+                } catch (error) {
+                    console.error('Error al cargar los datos de proveedores desde el script incrustado:', error);
                     providersData = {};
-                 }
+                }
             }
         }
         
@@ -1308,20 +1279,72 @@
             }
             
             function printOrder() {
-                const activeButton = providerButtonsContainer.querySelector('.active-provider');
-                if (!activeButton) {
-                    showFeedbackOnButton(printBtn, "Seleccione un proveedor");
-                    return;
-                }
-                
-                const providerName = activeButton.textContent;
-                const productsToPrint = providersData[providerName].filter(p => p.quantity > 0);
-
-                if (productsToPrint.length === 0) {
+                const data = getOrderData();
+                if (data.length === 0) {
                     showFeedbackOnButton(printBtn, "¡Nada que imprimir!");
                     return;
                 }
-                window.print();
+
+                let printContent = `
+                    <html>
+                    <head>
+                        <title>Pedido</title>
+                        <style>
+                            body { font-family: sans-serif; }
+                            h1 { text-align: center; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Resumen del Pedido</h1>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Proveedor</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.forEach(item => {
+                    printContent += `
+                        <tr>
+                            <td>${item.provider}</td>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                        </tr>
+                    `;
+                });
+
+                printContent += `
+                            </tbody>
+                        </table>
+                    </body>
+                    </html>
+                `;
+
+                const printFrame = document.createElement('iframe');
+                printFrame.style.position = 'absolute';
+                printFrame.style.width = '0';
+                printFrame.style.height = '0';
+                printFrame.style.border = '0';
+                document.body.appendChild(printFrame);
+
+                const frameDoc = printFrame.contentWindow.document;
+                frameDoc.open();
+                frameDoc.write(printContent);
+                frameDoc.close();
+
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                
+                setTimeout(() => {
+                    document.body.removeChild(printFrame);
+                }, 1000);
             }
 
             showExportModalBtn.addEventListener('click', () => exportModal.classList.add('visible'));
