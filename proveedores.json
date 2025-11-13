@@ -71,12 +71,19 @@
         "PAVO SANDWICH"
     ],
     "FRUTA": [
+        "AGUACATES",
         "AJOS",
+        "CALABACIN",
         "CASTAÑAS",
         "CEBOLLAS",
+        "CHIRIMOYA",
         "CIRUELAS AMARILLAS",
         "CIRUELAS ROJAS",
+        "COGOLLOS",
+        "ESPARRAGOS",
         "GRANADAS",
+        "ICEBERG",
+        "JUDIAS VERDES",
         "KAKIS",
         "KIWIS",
         "LIMONES",
@@ -98,15 +105,11 @@
         "PLATANOS",
         "PUERROS",
         "SANDIA",
+        "SETAS",
         "TOMATES LISOS",
         "TOMATES RA",
         "TOMATES RAMA",
-        "ZANAHORIAS",
-        "CALABACIN",
-        "ICEBERG",
-        "COGOLLOS",
-        "CHIRIMOYA"
-        
+        "ZANAHORIAS"
     ],
     "LA RODA": [
         "AGRADO CHAMPU",
@@ -172,7 +175,7 @@
         "SOPA MARISCO EXTRA BASCONA 400GR",
         "TEMPURA VERDURAS 400G",
         "TRONQUITO DE SURIMI FROXA 250GR"
-     ],
+    ],
     "TOLEDO": [
         "EMPANADA",
         "JAMON COCIDO RESERVA",
@@ -180,10 +183,9 @@
         "MORTADELA SICILIANA",
         "PALETA COCIDA",
         "PAVO A LAS FINAS HIERBAS",
-        "PIC KAMPER MINI",
         "PIC KAMPER",
+        "PIC KAMPER MINI",
         "PIC KAMPER PAVO",
         "SALAMI"
     ]
-
 }
