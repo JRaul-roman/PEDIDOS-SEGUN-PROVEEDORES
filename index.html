@@ -670,10 +670,10 @@
                 if (selectedProducts.length > 0) {
                     selectedProducts.forEach(product => {
                         const productItem = document.createElement('li');
-                        productItem.className = 'flex justify-between items-center text-color-secondary p-1';
+                        productItem.className = 'flex items-center text-color-secondary p-1 gap-4';
                         productItem.innerHTML = `
+                            <span class="font-bold text-color text-right w-8">${product.quantity}</span>
                             <span>${product.name}</span>
-                            <span class="font-bold text-color">${product.quantity}</span>
                         `;
                         selectedListContainer.appendChild(productItem);
                     });
