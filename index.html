@@ -395,21 +395,26 @@
         }
 
         async function loadData() {
-            try {
-                const response = await fetch('proveedores.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            const savedData = localStorage.getItem('myProvidersData');
+            if (savedData && Object.keys(JSON.parse(savedData)).length > 0) {
+                providersData = JSON.parse(savedData);
+            } else {
+                try {
+                    const response = await fetch('proveedores.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const defaultProviders = await response.json();
+                    
+                    providersData = Object.keys(defaultProviders).reduce((acc, key) => {
+                        acc[key] = convertToObjectArray(defaultProviders[key]);
+                        return acc;
+                    }, {});
+                    saveData();
+                } catch (error) {
+                    console.error('Error al cargar los datos de proveedores desde la URL externa:', error);
+                    providersData = {};
                 }
-                const defaultProviders = await response.json();
-                
-                providersData = Object.keys(defaultProviders).reduce((acc, key) => {
-                    acc[key] = convertToObjectArray(defaultProviders[key]);
-                    return acc;
-                }, {});
-                saveData();
-            } catch (error) {
-                console.error('Error al cargar los datos de proveedores desde la URL externa:', error);
-                providersData = {};
             }
         }
         
@@ -1175,20 +1180,20 @@
         let fileContent = null;
 
         async function checkFileModification() {
-            try {
-                const response = await fetch('proveedores.json');
-                const newFileContent = await response.text();
+            // try {
+            //     const response = await fetch('proveedores.json');
+            //     const newFileContent = await response.text();
 
-                if (fileContent && fileContent !== newFileContent) {
-                    await loadData();
-                    renderProviderButtons();
-                    resetProductDisplay();
-                }
+            //     if (fileContent && fileContent !== newFileContent) {
+            //         await loadData();
+            //         renderProviderButtons();
+            //         resetProductDisplay();
+            //     }
 
-                fileContent = newFileContent;
-            } catch (error) {
-                console.error('Error al verificar la modificación del archivo:', error);
-            }
+            //     fileContent = newFileContent;
+            // } catch (error) {
+            //     console.error('Error al verificar la modificación del archivo:', error);
+            // }
         }
 
         setInterval(checkFileModification, 5000); // Verificar cada 5 segundos
