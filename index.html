@@ -759,7 +759,11 @@
 
             function renderHistoryList() {
                 historyList.innerHTML = '';
-                const historyKeys = Object.keys(orderHistory).sort().reverse();
+                const historyKeys = Object.keys(orderHistory).sort((a, b) => {
+                    const dateA = new Date(a.split(' - ')[0]);
+                    const dateB = new Date(b.split(' - ')[0]);
+                    return dateB - dateA;
+                });
 
                 if (historyKeys.length === 0) {
                     historyList.innerHTML = `<p class="text-color-secondary italic">No hay pedidos guardados.</p>`;
