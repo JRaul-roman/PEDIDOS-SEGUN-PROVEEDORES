@@ -334,22 +334,7 @@
         </div>
     </div>
 
-    <!-- Modal para Ver Pedido Guardado -->
-    <div id="view-order-modal" class="modal-overlay">
-        <div class="modal-content box-component">
-            <div class="flex justify-between items-center mb-6">
-                 <h2 id="view-order-title" class="text-2xl font-semibold text-color">Detalle del Pedido</h2>
-                 <button id="close-view-order-modal-btn" class="text-color-secondary text-2xl font-bold">&times;</button>
-            </div>
-            <div id="view-order-list" class="space-y-2 mb-6">
-                <!-- Los productos del pedido se cargarán aquí -->
-            </div>
-            <div class="flex justify-end gap-4">
-                <button id="cancel-view-order-btn" class="btn btn-tertiary">Cancelar</button>
-                <button id="continue-order-btn" class="btn btn-primary">Continuar Pedido</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Modal para Opciones de Exportación -->
     <div id="export-modal" class="modal-overlay">
@@ -458,12 +443,6 @@
             const deleteModalText = document.getElementById('delete-modal-text');
             const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
             const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-            const viewOrderModal = document.getElementById('view-order-modal');
-            const viewOrderTitle = document.getElementById('view-order-title');
-            const viewOrderList = document.getElementById('view-order-list');
-            const closeViewOrderModalBtn = document.getElementById('close-view-order-modal-btn');
-            const cancelViewOrderBtn = document.getElementById('cancel-view-order-btn');
-            const continueOrderBtn = document.getElementById('continue-order-btn');
             const exportModal = document.getElementById('export-modal');
             const closeExportModalBtn = document.getElementById('close-export-modal-btn');
             const showExportModalBtn = document.getElementById('show-export-modal-btn');
@@ -798,10 +777,36 @@
                     const buttonsDiv = document.createElement('div');
                     buttonsDiv.className = 'flex gap-2 flex-shrink-0';
                     
-                    const viewBtn = document.createElement('button');
-                    viewBtn.textContent = 'Ver Pedido';
-                    viewBtn.className = 'btn btn-secondary text-sm !py-2 !px-3';
-                    viewBtn.onclick = () => showViewOrderModal(key);
+                    const restoreBtn = document.createElement('button');
+                    restoreBtn.textContent = 'Restaurar';
+                    restoreBtn.className = 'btn btn-secondary text-sm !py-2 !px-3';
+                    restoreBtn.onclick = () => {
+                        const providerNameParts = key.split(' - ');
+                        const providerName = providerNameParts.slice(1).join(' - ');
+                        const savedOrder = orderHistory[key];
+
+                        if (!providersData.hasOwnProperty(providerName) || !savedOrder) {
+                            showToast('El proveedor de este pedido ya no existe.', 3000, true);
+                            return;
+                        }
+
+                        providersData[providerName].forEach(p => p.quantity = 0);
+                        
+                        savedOrder.forEach(savedProduct => {
+                            const currentProduct = providersData[providerName].find(p => p.name === savedProduct.name);
+                            if (currentProduct) {
+                                currentProduct.quantity = savedProduct.quantity;
+                            } else {
+                                providersData[providerName].push(JSON.parse(JSON.stringify(savedProduct)));
+                            }
+                        });
+
+                        saveData();
+                        displayProducts(providerName);
+                        
+                        historyModal.classList.remove('visible');
+                        showToast('Pedido restaurado exitosamente.');
+                    };
 
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = 'Eliminar';
@@ -809,10 +814,10 @@
                     deleteBtn.onclick = () => {
                         delete orderHistory[key];
                         saveOrderHistory();
-                        renderHistoryList(); // Volver a renderizar la lista del historial
+                        renderHistoryList();
                     };
 
-                    buttonsDiv.appendChild(viewBtn);
+                    buttonsDiv.appendChild(restoreBtn);
                     buttonsDiv.appendChild(deleteBtn);
                     itemDiv.appendChild(textSpan);
                     itemDiv.appendChild(buttonsDiv);
@@ -820,61 +825,20 @@
                 });
             }
 
-            function showToast(message, duration = 3000) {
+            function showToast(message, duration = 3000, isError = false) {
                 const toast = document.createElement('div');
                 toast.textContent = message;
-                toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg';
+                toast.className = `fixed bottom-4 right-4 text-white py-2 px-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'}`;
                 document.body.appendChild(toast);
 
                 setTimeout(() => {
-                    document.body.removeChild(toast);
+                    if (toast.parentElement) {
+                        document.body.removeChild(toast);
+                    }
                 }, duration);
             }
 
-            function showViewOrderModal(orderKey) {
-                const providerName = orderKey.split(' - ')[1];
-                const savedOrder = orderHistory[orderKey];
 
-                if (!providersData.hasOwnProperty(providerName) || !savedOrder) {
-                    console.error("No se pudo encontrar el proveedor o el pedido.");
-                    return;
-                }
-
-                viewOrderTitle.textContent = `Pedido: ${orderKey}`;
-                viewOrderList.innerHTML = ''; 
-
-                savedOrder.forEach(product => {
-                    const productItem = document.createElement('div');
-                    productItem.className = 'flex justify-between items-center text-color-secondary p-1';
-                    productItem.innerHTML = `
-                        <span>${product.name}</span>
-                        <span class="font-bold text-color">${product.quantity}</span>
-                    `;
-                    viewOrderList.appendChild(productItem);
-                });
-
-                continueOrderBtn.onclick = () => {
-                    providersData[providerName].forEach(p => p.quantity = 0);
-                    
-                    savedOrder.forEach(savedProduct => {
-                        const currentProduct = providersData[providerName].find(p => p.name === savedProduct.name);
-                        if (currentProduct) {
-                            currentProduct.quantity = savedProduct.quantity;
-                        } else {
-                            providersData[providerName].push(JSON.parse(JSON.stringify(savedProduct)));
-                        }
-                    });
-
-                    saveData();
-                    displayProducts(providerName);
-                    
-                    viewOrderModal.classList.remove('visible');
-                    historyModal.classList.remove('visible');
-                    showToast('Pedido cargado exitosamente.');
-                };
-
-                viewOrderModal.classList.add('visible');
-            }
             
             // --- Lógica de Modales ---
             addProviderBtn.addEventListener('click', () => {
@@ -927,17 +891,7 @@
                 }
             });
 
-            // Listeners para el modal de ver pedido
-            closeViewOrderModalBtn.addEventListener('click', () => viewOrderModal.classList.remove('visible'));
-            cancelViewOrderBtn.addEventListener('click', () => {
-                viewOrderModal.classList.remove('visible');
-                historyModal.classList.remove('visible');
-            });
-            viewOrderModal.addEventListener('click', (event) => {
-                if(event.target === viewOrderModal) {
-                    viewOrderModal.classList.remove('visible');
-                }
-            });
+
 
             // --- Lógica de Exportación e Impresión ---
             function showFeedbackOnButton(button, message, isError = true) {
