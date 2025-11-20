@@ -294,9 +294,10 @@
             
             <div id="selected-products-section" class="mt-6 pt-4 border-t border-[var(--box-border-color)]">
                 <h2 class="text-xl font-semibold mb-3 text-color">Resumen del Pedido Actual</h2>
-                <ul id="selected-products-list" class="space-y-1">
-                    <li class="italic text-color-secondary">Selecciona un proveedor para ver el resumen de su pedido.</li>
+                <ul id="selected-products-list" class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
+                    <li class="italic text-color-secondary col-span-full">Selecciona un proveedor para ver el resumen de su pedido.</li>
                 </ul>
+                <div id="selected-products-actions" class="mt-4"></div>
             </div>
         </main>
 
@@ -675,10 +676,12 @@
 
             function renderSelectedProductsList(providerName) {
                 const selectedListContainer = document.getElementById('selected-products-list');
+                const selectedActionsContainer = document.getElementById('selected-products-actions');
                 selectedListContainer.innerHTML = '';
+                selectedActionsContainer.innerHTML = '';
                 
                 if (!providerName || !providersData[providerName]) {
-                    selectedListContainer.innerHTML = '<li class="italic text-color-secondary">Selecciona un proveedor para ver el resumen de su pedido.</li>';
+                    selectedListContainer.innerHTML = '<li class="italic text-color-secondary col-span-full">Selecciona un proveedor para ver el resumen de su pedido.</li>';
                     return;
                 }
 
@@ -697,15 +700,15 @@
 
                     const clearButton = document.createElement('button');
                     clearButton.textContent = 'Limpiar Pedido';
-                    clearButton.className = 'btn btn-danger btn-small mt-4';
+                    clearButton.className = 'btn btn-danger btn-small';
                     clearButton.onclick = () => {
                         providersData[providerName].forEach(p => p.quantity = 0);
                         saveData();
                         displayProducts(providerName);
                     };
-                    selectedListContainer.appendChild(clearButton);
+                    selectedActionsContainer.appendChild(clearButton);
                 } else {
-                    selectedListContainer.innerHTML = '<li class="italic text-color-secondary">No hay productos seleccionados para este proveedor.</li>';
+                    selectedListContainer.innerHTML = '<li class="italic text-color-secondary col-span-full">No hay productos seleccionados para este proveedor.</li>';
                 }
             }
 
