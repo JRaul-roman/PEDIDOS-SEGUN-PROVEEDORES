@@ -17,7 +17,6 @@
         "CODILLO ASADO",
         "GAZPACHO ALVALLE",
         "JAMON COCIDO PAVO",
-        "JAMONGUS SALCHICHAS",
         "MAXI PECHUGA PAVO",
         "MINI-FUETT",
         "MORTADELA ITALIANA",
@@ -26,6 +25,7 @@
         "PECHUGA DE PAVO",
         "PECHUGA PAVO BRASEADA",
         "SALCHICHAS CAMPESAN",
+        "SALCHICHAS JAMONGUS",
         "SALCHICHAS NORMALES",
         "SALCHICHAS OSCAR MAYER",
         "SALCHICHON CUMBRE REAL",
@@ -38,6 +38,7 @@
         "BOLSAS PEQUEÑAS PLASTICO",
         "CENTROS JAMON",
         "CHOPPED CRISMONA",
+        "LACON DE PAVO",
         "LOMO DE SAJONIA",
         "LOMO RESERVA ESPAÑA",
         "PAPEL PARAFINADO",
@@ -113,6 +114,7 @@
         "PERAS VERANO",
         "PIMIENTOS ROJOS",
         "PIMIENTOS VERDES",
+        "PIÑA",
         "PLATANOS",
         "PUERROS",
         "SANDIA",
@@ -201,3 +203,4 @@
         "SALAMI"
     ]
 }
+
