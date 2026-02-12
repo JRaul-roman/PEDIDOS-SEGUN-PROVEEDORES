@@ -90,8 +90,10 @@
         "CHIRIMOYA",
         "CIRUELAS AMARILLAS",
         "CIRUELAS ROJAS",
+        "COLIFLOR",
         "COGOLLOS",
         "ESPARRAGOS",
+        "ESPINACAS",
         "GRANADAS",
         "ICEBERG",
         "JUDIAS VERDES",
@@ -117,6 +119,7 @@
         "PIÑA",
         "PLATANOS",
         "PUERROS",
+        "REPOLLO",
         "SANDIA",
         "SETAS",
         "TOMATES LISOS",
@@ -203,4 +206,5 @@
         "SALAMI"
     ]
 }
+
 
