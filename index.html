@@ -436,7 +436,7 @@
         let providersData = {};
         let orderHistory = {};
         let lastProvidersRaw = null; // guardará el texto crudo del archivo proveedores.json en GitHub
-        const providersGithubUrlBase = 'https://raw.githubusercontent.com/JRaul-roman/PEDIDOS-SEGUN-PROVEEDORES/main/proveedores.json';
+        const providersGithubUrlBase = './proveedores.json';
         let providersFilePollInterval = 3000; // ms, intervalo para comprobar cambios en el archivo
         let pendingProvidersUpdate = null; // si hay cambios automáticos, se guardan aquí hasta que el usuario pulse 'Ver'
 
