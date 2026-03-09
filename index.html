@@ -644,9 +644,13 @@
             });
 
             // --- Lógica de la Aplicación ---
+            const hiddenProviders = new Set(['FRUTA VERANO']);
+
             function renderProviderButtons() {
                 providerButtonsContainer.innerHTML = '';
-                const providerNames = Object.keys(providersData).sort((a, b) => a.localeCompare(b));
+                const providerNames = Object.keys(providersData)
+                    .filter(name => !hiddenProviders.has(name))
+                    .sort((a, b) => a.localeCompare(b));
                 if (providerNames.length === 0) {
                     providerButtonsContainer.innerHTML = '<p class="text-color-secondary italic">No hay proveedores. Añade uno para empezar.</p>';
                     return;
@@ -675,6 +679,11 @@
                 "MANGOS", "MANZANAS FUJI", "MANZANAS VALVENOSTA", "MANZANAS NACIONAL", 
                 "MELONES", "NARANJAS MESA", "NARANJAS ZUMO", "PERAS AGUA", 
                 "PERAS CONFERENCIA", "PERAS VERANO", "PIÑA", "PLATANOS", "SANDIA"
+            ]);
+            // Frutas de verano que deben agruparse en una sección propia bajo FRUTA
+            const summerFruits = new Set([
+                "SANDIA", "MELONES", "CIRUELAS AMARILLAS", "CIRUELAS ROJAS",
+                "PARAGUAYOS", "MELOCOTON", "NECTARINAS", "ALBARICOQUES"
             ]);
 
             function createProductListItem(product, providerName) {
@@ -758,13 +767,28 @@
                 
                 if (products && products.length > 0) {
                     if (providerName === 'FRUTA') {
-                        // Lógica de clasificación
+                        // Lógica de clasificación con sección adicional para frutas de verano
                         const fruits = [];
                         const vegetables = [];
-                        products.forEach(p => {
-                            if (knownFruits.has(p.name)) fruits.push(p);
-                            else vegetables.push(p);
+                        const summer = [];
+
+                        // productos del proveedor FRUTA
+                        const regularProducts = providersData['FRUTA'] || [];
+                        // alimentos guardados en la colección FRUTA VERANO (se mantiene internamente pero no se muestra como proveedor)
+                        const summerProducts = providersData['FRUTA VERANO'] || []; 
+
+                        regularProducts.forEach(p => {
+                            if (summerFruits.has(p.name)) {
+                                summer.push(p);
+                            } else if (knownFruits.has(p.name)) {
+                                fruits.push(p);
+                            } else {
+                                vegetables.push(p);
+                            }
                         });
+
+                        // añadir cualquier elemento de la lista de verano directamente
+                        summerProducts.forEach(p => summer.push(p));
 
                         const createSection = (title, items, stateKey) => {
                             const container = document.createElement('div');
@@ -795,6 +819,9 @@
                         };
 
                         productList.appendChild(createSection('FRUTAS', fruits, 'fruits'));
+                        if (summer.length > 0) {
+                            productList.appendChild(createSection('FRUTA VERANO', summer, 'summer'));
+                        }
                         productList.appendChild(createSection('VERDURAS', vegetables, 'vegetables'));
 
                     } else {
