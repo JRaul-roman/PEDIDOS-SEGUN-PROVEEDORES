@@ -75,7 +75,9 @@
         "JAMON YORK MAXI",
         "MORTADELA PAVO",
         "MORTADELA PAVO ACEITUNAS",
-        "PAVO SANDWICH"
+        "PAVO SANDWICH",
+        "MAGRETA CERDO",
+        "MAXI PECHUGA PAVO RICURA"
     ],
     "FRUTA": [
         "ACELGAS",
@@ -213,6 +215,3 @@
         "SALAMI"
     ]
 }
-
-
-

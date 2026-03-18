@@ -436,7 +436,7 @@
         let providersData = {};
         let orderHistory = {};
         let lastProvidersRaw = null; // guardará el texto crudo del archivo proveedores.json en GitHub
-        const providersGithubUrlBase = './proveedores.json';
+        const providersGithubUrlBase = 'https://raw.githubusercontent.com/JRaul-roman/PEDIDOS-SEGUN-PROVEEDORES/main/proveedores.json';
         let providersFilePollInterval = 3000; // ms, intervalo para comprobar cambios en el archivo
         let pendingProvidersUpdate = null; // si hay cambios automáticos, se guardan aquí hasta que el usuario pulse 'Ver'
 
@@ -1446,5 +1446,21 @@
         
     </script>
 
+    <!-- 
+        NOTA PARA EL DESARROLLADOR:
+        Si estás abriendo este archivo directamente en el navegador (usando el protocolo file://),
+        es probable que el archivo 'proveedores.json' no se cargue debido a las políticas de seguridad del navegador (CORS).
+
+        Para solucionar esto, puedes levantar un servidor web local simple.
+        Si tienes Python instalado, abre una terminal en esta carpeta y ejecuta uno de los siguientes comandos:
+
+        Para Python 3:
+        python -m http.server 8000
+
+        Para Python 2:
+        python -m SimpleHTTPServer 8000
+
+        Luego, abre tu navegador y ve a: http://localhost:8000
+    -->
 </body>
 </html>
