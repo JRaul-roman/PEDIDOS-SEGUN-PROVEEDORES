@@ -710,19 +710,19 @@
                 minusBtn.onclick = () => {
                     if (product.quantity > 0) {
                         product.quantity--;
+                        quantityInput.value = product.quantity.toString().replace('.', ',');
                         saveData();
                         renderSelectedProductsList(providerName);
-                        displayProducts(providerName); // Nota: esto podría cerrar los acordeones si no tenemos cuidado, pero dejémoslo así por ahora
+                        displayProducts(providerName);
                     }
                 };
 
                 const quantityInput = document.createElement('input');
-                quantityInput.type = 'number';
-                quantityInput.value = product.quantity;
-                quantityInput.min = 0;
+                quantityInput.type = 'text';
+                quantityInput.value = product.quantity.toString().replace('.', ',');
                 quantityInput.className = 'input-field quantity-input';
                 quantityInput.onchange = (e) => {
-                    const value = parseInt(e.target.value, 10);
+                    const value = parseFloat(e.target.value.replace(',', '.'));
                     product.quantity = !isNaN(value) && value >= 0 ? value : 0;
                     saveData();
                     renderSelectedProductsList(providerName);
@@ -737,6 +737,7 @@
                 plusBtn.className = 'quantity-btn';
                 plusBtn.onclick = () => {
                     product.quantity++;
+                    quantityInput.value = product.quantity.toString().replace('.', ',');
                     saveData();
                     renderSelectedProductsList(providerName);
                     displayProducts(providerName);
@@ -1251,7 +1252,7 @@
                         currentProvider = item.provider;
                         textContent += `${currentProvider}:\n`;
                     }
-                    textContent += `  - ${item.name} (Cantidad: ${item.quantity})\n`;
+                    textContent += `  - ${item.name} (Cantidad: ${item.quantity.toString().replace('.', ',')})\n`;
                 });
                 
                 const blob = new Blob([textContent], { type: 'text/plain' });
@@ -1297,7 +1298,7 @@
                 const tableRows = [];
 
                 data.forEach(item => {
-                    const rowData = [item.provider, item.name, item.quantity];
+                    const rowData = [item.provider, item.name, item.quantity.toString().replace('.', ',')];
                     tableRows.push(rowData);
                 });
 
@@ -1334,7 +1335,7 @@
                         <tr>
                             <td>${item.provider}</td>
                             <td>${item.name}</td>
-                            <td>${item.quantity}</td>
+                            <td>${item.quantity.toString().replace('.', ',')}</td>
                         </tr>
                     `;
                 });
@@ -1391,7 +1392,7 @@
                         <tr>
                             <td>${item.provider}</td>
                             <td>${item.name}</td>
-                            <td>${item.quantity}</td>
+                            <td>${item.quantity.toString().replace('.', ',')}</td>
                         </tr>
                     `;
                 });
