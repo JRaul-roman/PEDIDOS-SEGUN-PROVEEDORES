@@ -440,9 +440,23 @@
         let providersFilePollInterval = 3000; // ms, intervalo para comprobar cambios en el archivo
         let pendingProvidersUpdate = null; // si hay cambios automáticos, se guardan aquí hasta que el usuario pulse 'Ver'
 
-        // Helper para convertir array de strings a array de objetos
-        function convertToObjectArray(arr) {
-            return arr.map(item => (typeof item === 'string') ? { name: item, quantity: 0 } : { ...item, quantity: item.quantity || 0 });
+        // Helper para convertir array de strings a array de objetos o manejar objetos anidados (categorías)
+        function convertToObjectArray(data) {
+            // Si es un array, convertir cada string a objeto { name, quantity }
+            if (Array.isArray(data)) {
+                return data.map(item => (typeof item === 'string') ? { name: item, quantity: 0 } : { ...item, quantity: item.quantity || 0 });
+            }
+            // Si es un objeto (estructura de categorías), convertir cada categoría recursivamente
+            if (typeof data === 'object' && data !== null) {
+                const result = {};
+                Object.keys(data).forEach(category => {
+                    result[category] = Array.isArray(data[category]) 
+                        ? data[category].map(item => (typeof item === 'string') ? { name: item, quantity: 0 } : { ...item, quantity: item.quantity || 0 })
+                        : data[category];
+                });
+                return result;
+            }
+            return data;
         }
 
         function saveData() {
@@ -501,10 +515,36 @@
 
             // Preservar cantidades de productos cuyo nombre coincide con los existentes
             Object.keys(newData).forEach(providerName => {
-                newData[providerName].forEach(product => {
-                    const existing = providersData[providerName] && providersData[providerName].find(p => p.name === product.name);
-                    if (existing) product.quantity = existing.quantity || 0;
-                });
+                const newProviderData = newData[providerName];
+                const oldProviderData = providersData[providerName];
+                
+                // Función auxiliar para buscar producto en estructura simple o anidada
+                const findProductInOld = (productName) => {
+                    if (Array.isArray(oldProviderData)) {
+                        return oldProviderData.find(p => p.name === productName);
+                    } else if (typeof oldProviderData === 'object') {
+                        for (let cat in oldProviderData) {
+                            const found = oldProviderData[cat].find(p => p.name === productName);
+                            if (found) return found;
+                        }
+                    }
+                    return null;
+                };
+
+                // Actualizar cantidades en estructura nueva
+                if (Array.isArray(newProviderData)) {
+                    newProviderData.forEach(product => {
+                        const existing = findProductInOld(product.name);
+                        if (existing) product.quantity = existing.quantity || 0;
+                    });
+                } else if (typeof newProviderData === 'object') {
+                    for (let cat in newProviderData) {
+                        newProviderData[cat].forEach(product => {
+                            const existing = findProductInOld(product.name);
+                            if (existing) product.quantity = existing.quantity || 0;
+                        });
+                    }
+                }
             });
 
             providersData = newData;
@@ -766,75 +806,110 @@
                 productList.innerHTML = '';
                 providerNameDisplay.textContent = `Productos de ${providerName}`;
                 
-                if (products && products.length > 0) {
-                    if (providerName === 'FRUTA') {
-                        // Lógica de clasificación con sección adicional para frutas de verano
-                        const fruits = [];
-                        const vegetables = [];
-                        const summer = [];
-
-                        // productos del proveedor FRUTA
-                        const regularProducts = providersData['FRUTA'] || [];
-                        // alimentos guardados en la colección FRUTA VERANO (se mantiene internamente pero no se muestra como proveedor)
-                        const summerProducts = providersData['FRUTA VERANO'] || []; 
-
-                        regularProducts.forEach(p => {
-                            if (summerFruits.has(p.name)) {
-                                summer.push(p);
-                            } else if (knownFruits.has(p.name)) {
-                                fruits.push(p);
-                            } else {
-                                vegetables.push(p);
-                            }
-                        });
-
-                        // añadir cualquier elemento de la lista de verano directamente
-                        summerProducts.forEach(p => summer.push(p));
-
+                if (products) {
+                    // Manejo de estructura con categorías (objeto con arrays, como DANONE)
+                    if (typeof products === 'object' && !Array.isArray(products)) {
+                        const categories = Object.keys(products).sort();
+                        
                         const createSection = (title, items, stateKey) => {
                             const container = document.createElement('div');
-                            container.className = 'mb-4 border border-[var(--box-border-color)] rounded-lg overflow-hidden';
+                            container.className = 'mb-6 p-4 rounded-lg bg-[var(--inner-bg-color)] border-l-4 border-[var(--btn-primary-bg)]';
 
-                            const header = document.createElement('button');
-                            header.className = 'w-full text-left font-bold text-lg p-3 bg-[var(--bg-gradient-end)] text-[var(--title-text-color)] flex justify-between items-center hover:bg-[var(--box-border-color)] transition-colors';
-                            const isOpen = accordionState[stateKey];
-                            header.innerHTML = `<span>${title}</span> <span>${isOpen ? '▲' : '▼'}</span>`;
+                            // Título de la categoría - más grande y destacado
+                            const titleElement = document.createElement('h3');
+                            titleElement.className = 'text-xl font-bold text-[var(--title-text-color)] mb-4 pb-2 border-b border-[var(--box-border-color)]';
+                            titleElement.textContent = title;
+                            container.appendChild(titleElement);
                             
+                            // Lista de productos debajo del título
                             const list = document.createElement('ul');
-                            list.className = `product-grid grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 ${isOpen ? '' : 'hidden'}`;
+                            list.className = 'product-grid grid grid-cols-1 sm:grid-cols-2 gap-3';
                             
                             items.forEach(product => {
                                 list.appendChild(createProductListItem(product, providerName));
                             });
 
-                            header.onclick = () => {
-                                 accordionState[stateKey] = !accordionState[stateKey];
-                                 list.classList.toggle('hidden');
-                                 const icon = header.querySelector('span:last-child');
-                                 icon.textContent = list.classList.contains('hidden') ? '▼' : '▲';
-                            };
-
-                            container.appendChild(header);
                             container.appendChild(list);
                             return container;
                         };
 
-                        productList.appendChild(createSection('FRUTAS', fruits, 'fruits'));
-                        if (summer.length > 0) {
-                            productList.appendChild(createSection('FRUTA VERANO', summer, 'summer'));
+                        categories.forEach(category => {
+                            const stateKey = `${providerName}_${category}`;
+                            productList.appendChild(createSection(category, products[category], stateKey));
+                        });
+
+                    } else if (Array.isArray(products) && products.length > 0) {
+                        if (providerName === 'FRUTA') {
+                            // Lógica de clasificación con sección adicional para frutas de verano
+                            const fruits = [];
+                            const vegetables = [];
+                            const summer = [];
+
+                            // productos del proveedor FRUTA
+                            const regularProducts = providersData['FRUTA'] || [];
+                            // alimentos guardados en la colección FRUTA VERANO (se mantiene internamente pero no se muestra como proveedor)
+                            const summerProducts = providersData['FRUTA VERANO'] || []; 
+
+                            regularProducts.forEach(p => {
+                                if (summerFruits.has(p.name)) {
+                                    summer.push(p);
+                                } else if (knownFruits.has(p.name)) {
+                                    fruits.push(p);
+                                } else {
+                                    vegetables.push(p);
+                                }
+                            });
+
+                            // añadir cualquier elemento de la lista de verano directamente
+                            summerProducts.forEach(p => summer.push(p));
+
+                            const createSection = (title, items, stateKey) => {
+                                const container = document.createElement('div');
+                                container.className = 'mb-4 border border-[var(--box-border-color)] rounded-lg overflow-hidden';
+
+                                const header = document.createElement('button');
+                                header.className = 'w-full text-left font-bold text-lg p-3 bg-[var(--bg-gradient-end)] text-[var(--title-text-color)] flex justify-between items-center hover:bg-[var(--box-border-color)] transition-colors';
+                                const isOpen = accordionState[stateKey];
+                                header.innerHTML = `<span>${title}</span> <span>${isOpen ? '▲' : '▼'}</span>`;
+                                
+                                const list = document.createElement('ul');
+                                list.className = `product-grid grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 ${isOpen ? '' : 'hidden'}`;
+                                
+                                items.forEach(product => {
+                                    list.appendChild(createProductListItem(product, providerName));
+                                });
+
+                                header.onclick = () => {
+                                     accordionState[stateKey] = !accordionState[stateKey];
+                                     list.classList.toggle('hidden');
+                                     const icon = header.querySelector('span:last-child');
+                                     icon.textContent = list.classList.contains('hidden') ? '▼' : '▲';
+                                };
+
+                                container.appendChild(header);
+                                container.appendChild(list);
+                                return container;
+                            };
+
+                            productList.appendChild(createSection('FRUTAS', fruits, 'fruits'));
+                            if (summer.length > 0) {
+                                productList.appendChild(createSection('FRUTA VERANO', summer, 'summer'));
+                            }
+                            productList.appendChild(createSection('VERDURAS', vegetables, 'vegetables'));
+
+                        } else {
+                            // Renderizado estándar
+                            const list = document.createElement('ul');
+                            list.className = 'product-grid grid grid-cols-1 sm:grid-cols-2 gap-4';
+                            products.forEach(product => {
+                                list.appendChild(createProductListItem(product, providerName));
+                            });
+                            productList.appendChild(list);
                         }
-                        productList.appendChild(createSection('VERDURAS', vegetables, 'vegetables'));
 
                     } else {
-                        // Renderizado estándar
-                        const list = document.createElement('ul');
-                        list.className = 'product-grid grid grid-cols-1 sm:grid-cols-2 gap-4';
-                        products.forEach(product => {
-                            list.appendChild(createProductListItem(product, providerName));
-                        });
-                        productList.appendChild(list);
+                        productList.innerHTML = '<div class="italic p-2 text-color-secondary">Este proveedor aún no tiene productos.</div>';
                     }
-
                 } else {
                     productList.innerHTML = '<div class="italic p-2 text-color-secondary">Este proveedor aún no tiene productos.</div>';
                 }
@@ -846,15 +921,40 @@
                     event.preventDefault();
                     const newProduct = newProductNameInput.value.trim().toUpperCase();
                     if (newProduct) {
-                        const exists = providersData[providerName].some(p => p.name === newProduct);
+                        const providerData = providersData[providerName];
+                        let exists = false;
+                        
+                        // Verificar si existe en estructura de array
+                        if (Array.isArray(providerData)) {
+                            exists = providerData.some(p => p.name === newProduct);
+                            if (!exists) {
+                                providerData.push({ name: newProduct, quantity: 1 });
+                            }
+                        }
+                        // Verificar si existe en estructura de objeto (categorías)
+                        else if (typeof providerData === 'object') {
+                            for (let cat in providerData) {
+                                if (providerData[cat].some(p => p.name === newProduct)) {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if (!exists) {
+                                // Agregar a la primera categoría disponible
+                                const firstCategory = Object.keys(providerData)[0];
+                                if (firstCategory) {
+                                    providerData[firstCategory].push({ name: newProduct, quantity: 1 });
+                                }
+                            }
+                        }
+                        
                         if (!exists) {
-                            providersData[providerName].push({ name: newProduct, quantity: 1 });
                             saveData();
                             renderSelectedProductsList(providerName);
+                            displayProducts(providerName);
                         }
                         newProductNameInput.value = '';
                         keyboard.clearInput();
-                        displayProducts(providerName);
                     }
                 };
                 addProductForm.addEventListener('submit', currentSubmitHandler);
@@ -865,7 +965,16 @@
                 
                 if(currentResetHandler) resetQuantitiesBtn.removeEventListener('click', currentResetHandler);
                 currentResetHandler = () => {
-                    providersData[providerName].forEach(p => p.quantity = 0);
+                    const providerData = providersData[providerName];
+                    if (Array.isArray(providerData)) {
+                        providerData.forEach(p => p.quantity = 0);
+                    } else if (typeof providerData === 'object') {
+                        for (let cat in providerData) {
+                            if (Array.isArray(providerData[cat])) {
+                                providerData[cat].forEach(p => p.quantity = 0);
+                            }
+                        }
+                    }
                     saveData();
                     renderSelectedProductsList(providerName);
                     displayProducts(providerName);
@@ -899,7 +1008,26 @@
                     return;
                 }
 
-                const selectedProducts = providersData[providerName].filter(p => p.quantity > 0);
+                let selectedProducts = [];
+                const providerData = providersData[providerName];
+                
+                // Manejar estructura de array (proveedores normales)
+                if (Array.isArray(providerData)) {
+                    selectedProducts = providerData.filter(p => p.quantity > 0);
+                } 
+                // Manejar estructura de objeto con categorías (como DANONE)
+                else if (typeof providerData === 'object') {
+                    for (let category in providerData) {
+                        const categoryProducts = providerData[category];
+                        if (Array.isArray(categoryProducts)) {
+                            categoryProducts.forEach(p => {
+                                if (p.quantity > 0) {
+                                    selectedProducts.push({ ...p, category });
+                                }
+                            });
+                        }
+                    }
+                }
 
                 if (selectedProducts.length > 0) {
                     selectedProducts.forEach(product => {
@@ -916,7 +1044,16 @@
                     clearButton.textContent = 'Limpiar Pedido';
                     clearButton.className = 'btn btn-danger btn-small';
                     clearButton.onclick = () => {
-                        providersData[providerName].forEach(p => p.quantity = 0);
+                        const providerData = providersData[providerName];
+                        if (Array.isArray(providerData)) {
+                            providerData.forEach(p => p.quantity = 0);
+                        } else if (typeof providerData === 'object') {
+                            for (let cat in providerData) {
+                                if (Array.isArray(providerData[cat])) {
+                                    providerData[cat].forEach(p => p.quantity = 0);
+                                }
+                            }
+                        }
                         saveData();
                         displayProducts(providerName);
                     };
@@ -943,7 +1080,26 @@
             
             // --- Lógica del Historial de Pedidos ---
             function saveCurrentOrder(providerName) {
-                 const productsToSave = providersData[providerName].filter(p => p.quantity > 0);
+                 let productsToSave = [];
+                 const providerData = providersData[providerName];
+                 
+                 // Filtrar productos de estructura de array
+                 if (Array.isArray(providerData)) {
+                     productsToSave = providerData.filter(p => p.quantity > 0);
+                 }
+                 // Filtrar productos de estructura de objeto (categorías)
+                 else if (typeof providerData === 'object') {
+                     for (let cat in providerData) {
+                         const categoryProducts = providerData[cat];
+                         if (Array.isArray(categoryProducts)) {
+                             categoryProducts.forEach(p => {
+                                 if (p.quantity > 0) {
+                                     productsToSave.push(p);
+                                 }
+                             });
+                         }
+                     }
+                 }
                  
                  if (productsToSave.length === 0) {
                     const originalText = saveOrderBtn.textContent;
@@ -978,9 +1134,24 @@
             
             resetAllBtn.addEventListener('click', () => {
                 for (const provider in providersData) {
-                    providersData[provider].forEach(product => {
-                        product.quantity = 0;
-                    });
+                    const providerData = providersData[provider];
+                    
+                    // Manejar estructura de array
+                    if (Array.isArray(providerData)) {
+                        providerData.forEach(product => {
+                            product.quantity = 0;
+                        });
+                    }
+                    // Manejar estructura de objeto (categorías)
+                    else if (typeof providerData === 'object') {
+                        for (let cat in providerData) {
+                            if (Array.isArray(providerData[cat])) {
+                                providerData[cat].forEach(product => {
+                                    product.quantity = 0;
+                                });
+                            }
+                        }
+                    }
                 }
                 saveData();
                 const activeButton = providerButtonsContainer.querySelector('.active-provider');
@@ -1224,7 +1395,27 @@
                 const data = [];
                 const providerKeys = Object.keys(providersData).sort((a,b) => a.localeCompare(b));
                 for (const provider of providerKeys) {
-                    const productsToExport = providersData[provider].filter(p => p.quantity > 0);
+                    const providerData = providersData[provider];
+                    let productsToExport = [];
+                    
+                    // Manejar estructura de array
+                    if (Array.isArray(providerData)) {
+                        productsToExport = providerData.filter(p => p.quantity > 0);
+                    }
+                    // Manejar estructura de objeto (categorías)
+                    else if (typeof providerData === 'object') {
+                        for (let cat in providerData) {
+                            const categoryProducts = providerData[cat];
+                            if (Array.isArray(categoryProducts)) {
+                                categoryProducts.forEach(p => {
+                                    if (p.quantity > 0) {
+                                        productsToExport.push(p);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    
                     if (productsToExport.length > 0) {
                         productsToExport.forEach(product => {
                             data.push({
