@@ -813,17 +813,17 @@
                         
                         const createSection = (title, items, stateKey) => {
                             const container = document.createElement('div');
-                            container.className = 'mb-6 p-4 rounded-lg bg-[var(--inner-bg-color)] border-l-4 border-[var(--btn-primary-bg)]';
+                            container.className = 'mb-3 p-2 rounded-lg bg-[var(--inner-bg-color)] border-l-4 border-[var(--btn-primary-bg)]';
 
                             // Título de la categoría - más grande y destacado
                             const titleElement = document.createElement('h3');
-                            titleElement.className = 'text-xl font-bold text-[var(--title-text-color)] mb-4 pb-2 border-b border-[var(--box-border-color)]';
+                            titleElement.className = 'text-base font-bold text-[var(--title-text-color)] mb-2 pb-1 border-b border-[var(--box-border-color)]';
                             titleElement.textContent = title;
                             container.appendChild(titleElement);
                             
                             // Lista de productos debajo del título
                             const list = document.createElement('ul');
-                            list.className = 'product-grid grid grid-cols-1 sm:grid-cols-2 gap-3';
+                            list.className = 'product-grid grid grid-cols-1 sm:grid-cols-2 gap-2';
                             
                             items.forEach(product => {
                                 list.appendChild(createProductListItem(product, providerName));
