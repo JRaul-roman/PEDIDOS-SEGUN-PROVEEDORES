@@ -1033,9 +1033,12 @@
                     selectedProducts.forEach(product => {
                         const productItem = document.createElement('li');
                         productItem.className = 'flex items-center text-color-secondary p-1 gap-4';
+                        
+                        const displayName = product.category ? `${product.category} - ${product.name}` : product.name;
+                        
                         productItem.innerHTML = `
                             <span class="font-bold text-color text-right w-8">${product.quantity}</span>
-                            <span>${product.name}</span>
+                            <span>${displayName}</span>
                         `;
                         selectedListContainer.appendChild(productItem);
                     });
