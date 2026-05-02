@@ -1227,17 +1227,51 @@
                             return;
                         }
 
-                        providersData[providerName].forEach(p => p.quantity = 0);
-                        
+                        const providerData = providersData[providerName];
+
+                        // Resetear cantidades actuales
+                        if (Array.isArray(providerData)) {
+                            providerData.forEach(p => p.quantity = 0);
+                        } else if (typeof providerData === 'object') {
+                            for (let cat in providerData) {
+                                if (Array.isArray(providerData[cat])) {
+                                    providerData[cat].forEach(p => p.quantity = 0);
+                                }
+                            }
+                        }
+
+                        // Aplicar cantidades guardadas
                         savedOrder.forEach(savedProduct => {
-                            const currentProduct = providersData[providerName].find(p => p.name === savedProduct.name);
-                            if (currentProduct) {
-                                currentProduct.quantity = savedProduct.quantity;
-                            } else {
-                                providersData[providerName].push(JSON.parse(JSON.stringify(savedProduct)));
+                            let currentProduct = null;
+                            if (Array.isArray(providerData)) {
+                                currentProduct = providerData.find(p => p.name === savedProduct.name);
+                                if (currentProduct) {
+                                    currentProduct.quantity = savedProduct.quantity;
+                                } else {
+                                    providerData.push(JSON.parse(JSON.stringify(savedProduct)));
+                                }
+                            } else if (typeof providerData === 'object') {
+                                let found = false;
+                                for (let cat in providerData) {
+                                    if (Array.isArray(providerData[cat])) {
+                                        currentProduct = providerData[cat].find(p => p.name === savedProduct.name);
+                                        if (currentProduct) {
+                                            currentProduct.quantity = savedProduct.quantity;
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!found) {
+                                    const targetCat = savedProduct.category || Object.keys(providerData)[0];
+                                    if (targetCat && providerData[targetCat]) {
+                                        providerData[targetCat].push(JSON.parse(JSON.stringify(savedProduct)));
+                                    } else if (targetCat) {
+                                        providerData[targetCat] = [JSON.parse(JSON.stringify(savedProduct))];
+                                    }
+                                }
                             }
                         });
-
                         saveData();
                         displayProducts(providerName);
                         
