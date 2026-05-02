@@ -1030,18 +1030,43 @@
                 }
 
                 if (selectedProducts.length > 0) {
-                    selectedProducts.forEach(product => {
-                        const productItem = document.createElement('li');
-                        productItem.className = 'flex items-center text-color-secondary p-1 gap-4';
-                        
-                        const displayName = product.category ? `${product.category} - ${product.name}` : product.name;
-                        
-                        productItem.innerHTML = `
-                            <span class="font-bold text-color text-right w-8">${product.quantity}</span>
-                            <span>${displayName}</span>
-                        `;
-                        selectedListContainer.appendChild(productItem);
-                    });
+                    const hasCategories = selectedProducts.some(p => p.category);
+
+                    if (hasCategories) {
+                        const productsByCategory = {};
+                        selectedProducts.forEach(product => {
+                            const cat = product.category || 'OTROS';
+                            if (!productsByCategory[cat]) productsByCategory[cat] = [];
+                            productsByCategory[cat].push(product);
+                        });
+
+                        for (const cat in productsByCategory) {
+                            const catHeader = document.createElement('li');
+                            catHeader.className = 'col-span-full font-bold text-color mt-3 border-b border-[var(--box-border-color)] pb-1';
+                            catHeader.textContent = cat;
+                            selectedListContainer.appendChild(catHeader);
+
+                            productsByCategory[cat].forEach(product => {
+                                const productItem = document.createElement('li');
+                                productItem.className = 'flex items-center text-color-secondary p-1 gap-4 ml-4 col-span-full';
+                                productItem.innerHTML = `
+                                    <span class="font-bold text-color text-right w-8">${product.quantity}</span>
+                                    <span>${product.name}</span>
+                                `;
+                                selectedListContainer.appendChild(productItem);
+                            });
+                        }
+                    } else {
+                        selectedProducts.forEach(product => {
+                            const productItem = document.createElement('li');
+                            productItem.className = 'flex items-center text-color-secondary p-1 gap-4';
+                            productItem.innerHTML = `
+                                <span class="font-bold text-color text-right w-8">${product.quantity}</span>
+                                <span>${product.name}</span>
+                            `;
+                            selectedListContainer.appendChild(productItem);
+                        });
+                    }
 
                     const clearButton = document.createElement('button');
                     clearButton.textContent = 'Limpiar Pedido';
