@@ -1049,7 +1049,7 @@
                 }
 
                 if (selectedProducts.length > 0) {
-                    const hasCategories = selectedProducts.some(p => p.category);
+                    const hasCategories = providerName !== 'FRUTA' && selectedProducts.some(p => p.category);
 
                     if (hasCategories) {
                         const productsByCategory = {};
