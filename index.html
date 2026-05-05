@@ -975,6 +975,13 @@
                             }
                         }
                     }
+                    // Para FRUTA, también resetear FRUTA VERANO
+                    if (providerName === 'FRUTA' && providersData['FRUTA VERANO']) {
+                        const summerProducts = providersData['FRUTA VERANO'];
+                        if (Array.isArray(summerProducts)) {
+                            summerProducts.forEach(p => p.quantity = 0);
+                        }
+                    }
                     saveData();
                     renderSelectedProductsList(providerName);
                     displayProducts(providerName);
@@ -1026,6 +1033,18 @@
                                 }
                             });
                         }
+                    }
+                }
+
+                // Para FRUTA, también incluir productos de FRUTA VERANO
+                if (providerName === 'FRUTA' && providersData['FRUTA VERANO']) {
+                    const summerProducts = providersData['FRUTA VERANO'];
+                    if (Array.isArray(summerProducts)) {
+                        summerProducts.forEach(p => {
+                            if (p.quantity > 0) {
+                                selectedProducts.push({ ...p, category: 'FRUTA VERANO' });
+                            }
+                        });
                     }
                 }
 
@@ -1082,6 +1101,13 @@
                                 }
                             }
                         }
+                        // Para FRUTA, también resetear FRUTA VERANO
+                        if (providerName === 'FRUTA' && providersData['FRUTA VERANO']) {
+                            const summerProducts = providersData['FRUTA VERANO'];
+                            if (Array.isArray(summerProducts)) {
+                                summerProducts.forEach(p => p.quantity = 0);
+                            }
+                        }
                         saveData();
                         displayProducts(providerName);
                     };
@@ -1126,6 +1152,18 @@
                                  }
                              });
                          }
+                     }
+                 }
+                 
+                 // Para FRUTA, también incluir productos de FRUTA VERANO
+                 if (providerName === 'FRUTA' && providersData['FRUTA VERANO']) {
+                     const summerProducts = providersData['FRUTA VERANO'];
+                     if (Array.isArray(summerProducts)) {
+                         summerProducts.forEach(p => {
+                             if (p.quantity > 0) {
+                                 productsToSave.push(p);
+                             }
+                         });
                      }
                  }
                  
@@ -1239,12 +1277,26 @@
                                 }
                             }
                         }
+                        
+                        // Para FRUTA, también resetear FRUTA VERANO
+                        if (providerName === 'FRUTA' && providersData['FRUTA VERANO']) {
+                            const summerProducts = providersData['FRUTA VERANO'];
+                            if (Array.isArray(summerProducts)) {
+                                summerProducts.forEach(p => p.quantity = 0);
+                            }
+                        }
 
                         // Aplicar cantidades guardadas
                         savedOrder.forEach(savedProduct => {
                             let currentProduct = null;
                             if (Array.isArray(providerData)) {
                                 currentProduct = providerData.find(p => p.name === savedProduct.name);
+                                
+                                // Si no se encuentra y es FRUTA, buscar en FRUTA VERANO
+                                if (!currentProduct && providerName === 'FRUTA' && providersData['FRUTA VERANO']) {
+                                    currentProduct = providersData['FRUTA VERANO'].find(p => p.name === savedProduct.name);
+                                }
+
                                 if (currentProduct) {
                                     currentProduct.quantity = savedProduct.quantity;
                                 } else {
@@ -1457,6 +1509,8 @@
                 const data = [];
                 const providerKeys = Object.keys(providersData).sort((a,b) => a.localeCompare(b));
                 for (const provider of providerKeys) {
+                    if (hiddenProviders.has(provider)) continue;
+                    
                     const providerData = providersData[provider];
                     let productsToExport = [];
                     
@@ -1475,6 +1529,18 @@
                                     }
                                 });
                             }
+                        }
+                    }
+                    
+                    // Para FRUTA, también incluir productos de FRUTA VERANO
+                    if (provider === 'FRUTA' && providersData['FRUTA VERANO']) {
+                        const summerProducts = providersData['FRUTA VERANO'];
+                        if (Array.isArray(summerProducts)) {
+                            summerProducts.forEach(p => {
+                                if (p.quantity > 0) {
+                                    productsToExport.push(p);
+                                }
+                            });
                         }
                     }
                     
